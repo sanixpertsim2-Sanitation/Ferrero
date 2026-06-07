@@ -297,6 +297,36 @@ body {
   color: #fff;
 }
 
+.badge-pre_verification_in_progress {
+  background: #9b59b6;
+  color: #fff;
+}
+
+.badge-cleaning_in_progress {
+  background: #f39c12;
+  color: #fff;
+}
+
+.badge-post_verification_pending {
+  background: #3498db;
+  color: #fff;
+}
+
+.badge-area_lead_verification_pending {
+  background: #e67e22;
+  color: #fff;
+}
+
+.badge-released {
+  background: #1a5f2a;
+  color: #fff;
+}
+
+.badge-blocked {
+  background: #e74c3c;
+  color: #fff;
+}
+
 /* ── Forms ── */
 .form-group {
   margin-bottom: 16px;
