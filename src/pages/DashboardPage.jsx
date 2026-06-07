@@ -1,49 +1,70 @@
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { getLines, getDashboardStats } from '@/lib/supabase.js'
+import { getStatusLabel, statusBadgeClass } from '@/utils/statusLabels.js'
+import { ADMIN_EMAIL } from '@/lib/supabase.js'
 
 /**
- * Dashboard Page — Sanitation Overview
- * Real-time overview of all lines, cleaning status,
- * damage reports, and recent activity.
- * Admin access for oversight and reporting.
+ * DashboardPage — Admin dashboard with stats and line status
+ * Microsoft SSO placeholder. Email override: adarsh@sanixperts.com
  */
 export default function DashboardPage() {
-  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [authenticated, setAuthenticated] = useState(false)
+  const [lines, setLines] = useState([])
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const stats = [
-    { label: 'Areas Cleaned', value: '0', total: '0', color: 'primary' },
-    { label: 'Pending RTE', value: '0', total: '', color: 'warning' },
-    { label: 'Damage Reports', value: '0', total: '', color: 'danger' },
-    { label: 'Released', value: '0', total: '', color: 'success' },
-  ]
+  const handleAuth = () => {
+    if (email.trim() === ADMIN_EMAIL) setAuthenticated(true)
+    else alert('Access Denied')
+  }
+
+  useEffect(() => {
+    if (!authenticated) return
+    Promise.all([getLines(), getDashboardStats()]).then(([l, s]) => {
+      setLines(l); setStats(s); setLoading(false)
+    })
+  }, [authenticated])
+
+  if (!authenticated) {
+    return (
+      <div className="page dashboard-page">
+        <h1>SaniExpert Dashboard</h1>
+        <div className="auth-gate card">
+          <p>Admin Access</p>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin email" />
+          <button className="btn btn-primary" onClick={handleAuth}>Access</button>
+          <small>TODO: Replace with Microsoft OAuth</small>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>
 
   return (
-    <div className="page">
-      <h1 className="page-header">Dashboard</h1>
-      <p className="page-subtitle">Real-time overview of cleaning operations</p>
-
+    <div className="page dashboard-page">
+      <h1>SaniExpert Dashboard</h1>
       <div className="stats-grid">
-        {stats.map((s) => (
-          <div key={s.label} className={`stat-card stat-${s.color}`}>
-            <div className="stat-value">
-              {s.value}{s.total && <span className="stat-total">/{s.total}</span>}
-            </div>
-            <div className="stat-label">{s.label}</div>
+        <div className="stat-card"><div className="stat-value">{lines.length}</div><div>Total Lines</div></div>
+        <div className="stat-card"><div className="stat-value">{stats?.preCleanLogs?.length || 0}</div><div>In Pre-Clean</div></div>
+        <div className="stat-card"><div className="stat-value">{stats?.postCleanLogs?.length || 0}</div><div>In Post-Clean</div></div>
+        <div className="stat-card"><div className="stat-value">{stats?.handoverTasks?.filter(t => t.status === 'pending')?.length || 0}</div><div>Pending Handovers</div></div>
+        <div className="stat-card"><div className="stat-value">{stats?.releaseLogs?.length || 0}</div><div>Released Today</div></div>
+        <div className="stat-card"><div className="stat-value">{stats?.damageReports?.filter(d => d.status === 'open')?.length || 0}</div><div>Open Damages</div></div>
+      </div>
+
+      <h2>Line Status</h2>
+      <div className="table-card">
+        {lines.map(line => (
+          <div key={line.id} className="line-status-row">
+            <span className="line-name">{line.name}</span>
+            <span className={`badge ${statusBadgeClass(line.status)}`}>{getStatusLabel(line.status)}</span>
           </div>
         ))}
       </div>
 
-      <div className="card">
-        <h3 className="card-title">Recent Activity</h3>
-        <div className="activity-list">
-          <div className="empty-state" style={{ padding: '24px 0' }}>
-            <p>No recent activity</p>
-          </div>
-        </div>
-      </div>
-
-      <button className="btn btn-gray btn-full mt-2" onClick={() => navigate('/lines')}>
-        Back to Lines
-      </button>
+      <button className="btn btn-outline" onClick={() => setAuthenticated(false)}>Logout</button>
     </div>
   )
 }
