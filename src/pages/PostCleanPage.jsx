@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getChecklist, insertPostCleanLog, insertDamageReport, insertHandoverTask, getPreCleanLogs } from '@/lib/supabase.js'
+import { getChecklist, insertPostCleanLog, insertDamageReport, insertHandoverTask, getPreCleanLogs, uploadPhoto } from '@/lib/supabase.js'
 import { detectShift } from '@/utils/shiftDetection.js'
 
 /**
@@ -22,6 +22,9 @@ export default function PostCleanPage() {
   const [showDamageModal, setShowDamageModal] = useState(false)
   const [damageDesc, setDamageDesc] = useState('')
   const [damageSeverity, setDamageSeverity] = useState('medium')
+  const [damagePhotoFile, setDamagePhotoFile] = useState(null)
+  const [damagePhotoPreview, setDamagePhotoPreview] = useState('')
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem('selectedLine')
@@ -42,10 +45,28 @@ export default function PostCleanPage() {
   const handleNext = () => { if (currentIndex < items.length - 1) setCurrentIndex(i => i + 1) }
   const handlePrev = () => { if (currentIndex > 0) setCurrentIndex(i => i - 1) }
 
+  const handleDamagePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setDamagePhotoFile(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => setDamagePhotoPreview(ev.target.result)
+    reader.readAsDataURL(file)
+  }
+
   const handleDamageSubmit = async () => {
     if (!damageDesc.trim()) { alert('Description required'); return }
-    await insertDamageReport({ line_id: line.id, description: damageDesc, severity: damageSeverity, status: 'open' })
-    setShowDamageModal(false); setDamageDesc(''); alert('Damage reported!')
+    setUploadingPhoto(true)
+    try {
+      let photoUrl = ''
+      if (damagePhotoFile) {
+        photoUrl = await uploadPhoto(damagePhotoFile)
+      }
+      await insertDamageReport({ line_id: line.id, description: damageDesc, photo_url: photoUrl, severity: damageSeverity, status: 'open' })
+      setShowDamageModal(false); setDamageDesc(''); setDamagePhotoFile(null); setDamagePhotoPreview('');
+      alert('Damage reported!')
+    } catch (e) { alert('Upload error: ' + e.message) }
+    setUploadingPhoto(false)
   }
 
   const handleSubmit = async () => {
@@ -136,9 +157,15 @@ export default function PostCleanPage() {
             <select value={damageSeverity} onChange={e => setDamageSeverity(e.target.value)}>
               <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
             </select>
+            <label className="photo-upload">
+              <input type="file" accept="image/*" capture="environment" onChange={handleDamagePhotoChange} style={{ display: 'none' }} />
+              <div className="photo-dropzone">
+                {damagePhotoPreview ? <img src={damagePhotoPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 120 }} /> : <span>📷 Tap to take photo</span>}
+              </div>
+            </label>
             <div className="modal-actions">
               <button className="btn btn-outline" onClick={() => setShowDamageModal(false)}>Cancel</button>
-              <button className="btn btn-danger" onClick={handleDamageSubmit}>Submit</button>
+              <button className="btn btn-danger" onClick={handleDamageSubmit} disabled={uploadingPhoto}>{uploadingPhoto ? 'Uploading...' : 'Submit'}</button>
             </div>
           </div>
         </div>

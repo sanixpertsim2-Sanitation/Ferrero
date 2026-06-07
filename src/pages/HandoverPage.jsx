@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getHandoverTasks, updateHandoverTask, getDamageReports, updateDamageReport, insertHandoverTask } from '@/lib/supabase.js'
+import { getHandoverTasks, updateHandoverTask, getDamageReports, updateDamageReport, insertHandoverTask, uploadPhoto } from '@/lib/supabase.js'
 
 /**
  * HandoverPage — Resolve all open handover tasks and damage reports
@@ -16,6 +16,8 @@ export default function HandoverPage() {
   const [activeTask, setActiveTask] = useState(null)
   const [completedBy, setCompletedBy] = useState('')
   const [completionNotes, setCompletionNotes] = useState('')
+  const [completionPhoto, setCompletionPhoto] = useState(null)
+  const [completionPreview, setCompletionPreview] = useState('')
   const [activeDamage, setActiveDamage] = useState(null)
   const [damageAction, setDamageAction] = useState('')
 
@@ -35,17 +37,34 @@ export default function HandoverPage() {
     setLoading(false)
   }
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setCompletionPhoto(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => setCompletionPreview(ev.target.result)
+    reader.readAsDataURL(file)
+  }
+
   const handleCompleteTask = async (taskId) => {
     if (!completedBy.trim()) { alert('Completed By name is required'); return }
-    await updateHandoverTask(taskId, { status: 'completed', completed_by: completedBy.trim(), completion_notes: completionNotes, completed_at: new Date().toISOString() })
-    setActiveTask(null); setCompletedBy(''); setCompletionNotes('')
+    let photoUrl = ''
+    if (completionPhoto) {
+      try { photoUrl = await uploadPhoto(completionPhoto) } catch (e) { alert('Photo upload failed: ' + e.message); return }
+    }
+    await updateHandoverTask(taskId, { status: 'completed', completed_by: completedBy.trim(), completion_photo_url: photoUrl, completion_notes: completionNotes, completed_at: new Date().toISOString() })
+    setActiveTask(null); setCompletedBy(''); setCompletionNotes(''); setCompletionPhoto(null); setCompletionPreview('')
     loadData(line)
   }
 
   const handleDamageCompleted = async (damageId) => {
     if (!completedBy.trim()) { alert('Name is required'); return }
-    await updateDamageReport(damageId, { status: 'completed', completed_by: completedBy.trim(), completed_at: new Date().toISOString() })
-    setActiveDamage(null); setCompletedBy(''); loadData(line)
+    let photoUrl = ''
+    if (completionPhoto) {
+      try { photoUrl = await uploadPhoto(completionPhoto) } catch (e) { alert('Photo upload failed: ' + e.message); return }
+    }
+    await updateDamageReport(damageId, { status: 'completed', completed_by: completedBy.trim(), completion_photo_url: photoUrl, completed_at: new Date().toISOString() })
+    setActiveDamage(null); setCompletedBy(''); setCompletionPhoto(null); setCompletionPreview(''); loadData(line)
   }
 
   const handleDamageHandover = async (damageId) => {
@@ -77,9 +96,15 @@ export default function HandoverPage() {
           {activeTask === task.id ? (
             <div className="completion-form">
               <input type="text" placeholder="Completed By *" value={completedBy} onChange={e => setCompletedBy(e.target.value)} />
+              <label className="photo-upload">
+                <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={{ display: 'none' }} />
+                <div className="photo-dropzone small">
+                  {completionPreview ? <img src={completionPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 100 }} /> : <span>📷 Photo proof</span>}
+                </div>
+              </label>
               <textarea placeholder="Notes" value={completionNotes} onChange={e => setCompletionNotes(e.target.value)} rows={2} />
               <button className="btn btn-primary" onClick={() => handleCompleteTask(task.id)}>Submit</button>
-              <button className="btn btn-outline" onClick={() => setActiveTask(null)}>Cancel</button>
+              <button className="btn btn-outline" onClick={() => { setActiveTask(null); setCompletionPhoto(null); setCompletionPreview(''); }}>Cancel</button>
             </div>
           ) : (
             <button className="btn btn-primary" onClick={() => setActiveTask(task.id)}>Complete Task</button>
@@ -95,12 +120,20 @@ export default function HandoverPage() {
           {activeDamage === dmg.id ? (
             <div className="completion-form">
               <input type="text" placeholder="Name *" value={completedBy} onChange={e => setCompletedBy(e.target.value)} />
+              {damageAction === 'completed' && (
+                <label className="photo-upload">
+                  <input type="file" accept="image/*" capture="environment" onChange={handlePhotoChange} style={{ display: 'none' }} />
+                  <div className="photo-dropzone small">
+                    {completionPreview ? <img src={completionPreview} alt="Preview" style={{ maxWidth: '100%', maxHeight: 100 }} /> : <span>📷 Completion photo</span>}
+                  </div>
+                </label>
+              )}
               <textarea placeholder={damageAction === 'handover' ? 'Handover Reason *' : 'Notes'} value={completionNotes} onChange={e => setCompletionNotes(e.target.value)} rows={2} />
               {damageAction === 'completed'
                 ? <button className="btn btn-primary" onClick={() => handleDamageCompleted(dmg.id)}>Mark Completed</button>
                 : <button className="btn btn-warning" onClick={() => handleDamageHandover(dmg.id)}>Create Handover</button>
               }
-              <button className="btn btn-outline" onClick={() => setActiveDamage(null)}>Cancel</button>
+              <button className="btn btn-outline" onClick={() => { setActiveDamage(null); setCompletionPhoto(null); setCompletionPreview(''); }}>Cancel</button>
             </div>
           ) : (
             <div className="damage-actions">

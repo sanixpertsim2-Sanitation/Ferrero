@@ -5,6 +5,17 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// ── Storage: Photo Upload ──
+export const uploadPhoto = async (file, bucket = 'verification-photos') => {
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}.jpg`
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, file, { contentType: 'image/jpeg', upsert: false })
+  if (error) throw error
+  const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path)
+  return publicUrl
+}
+
 // ── Auth (placeholder for Microsoft SSO + email override) ──
 export const ADMIN_EMAIL = 'adarsh@sanixperts.com'
 
