@@ -1,39 +1,28 @@
 /**
- * Status label mappings matching the Supabase schema CHECK constraint
- * Values: 'idle', 'pre_verification_in_progress', 'cleaning_in_progress',
- *         'post_verification_pending', 'area_lead_verification_pending',
- *         'released', 'blocked'
+ * Status label mappings for the SaniExpert v2 sanitation control system.
+ * Maps database status values to human-readable labels.
  */
 
 export const statusLabels = {
-  idle:                           'Idle',
-  pre_verification_in_progress:   'Pre-Verification In Progress',
-  cleaning_in_progress:           'Cleaning In Progress',
-  post_verification_pending:      'Post-Verification Pending',
-  area_lead_verification_pending: 'Area Lead Verification Pending',
-  released:                       'Released',
-  blocked:                        'Blocked',
-};
+  idle: 'Idle',
+  pre_verification_in_progress: 'Pre-Verification',
+  cleaning_in_progress: 'Cleaning',
+  post_verification_pending: 'Post-Verification',
+  area_lead_verification_pending: 'Lead Verification',
+  released: 'Released',
+  blocked: 'Blocked',
+}
 
-export const statusBadgeClass = (status) => {
-  return `badge-${status || 'idle'}`;
-};
+/**
+ * Get a human-readable label for a status code.
+ * @param {string} s - The status code from the database
+ * @returns {string} Human-readable label, or the raw status if unknown
+ */
+export const getStatusLabel = (s) => statusLabels[s] || s || 'Unknown'
 
-export const getStatusLabel = (status) => {
-  return statusLabels[status] || status || 'Unknown';
-};
-
-// Short labels for compact displays
-export const shortStatusLabels = {
-  idle:                           'Idle',
-  pre_verification_in_progress:   'Pre-Verif',
-  cleaning_in_progress:           'Cleaning',
-  post_verification_pending:      'Post-Verif',
-  area_lead_verification_pending: 'Lead Verif',
-  released:                       'Released',
-  blocked:                        'Blocked',
-};
-
-export const getShortStatusLabel = (status) => {
-  return shortStatusLabels[status] || status || 'Unknown';
-};
+/**
+ * Get the CSS badge class for a status code.
+ * @param {string} s - The status code from the database
+ * @returns {string} CSS class name for styling the badge
+ */
+export const statusBadgeClass = (s) => `badge-${s || 'idle'}`

@@ -1,120 +1,44 @@
-import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { supabase, getCurrentUser } from './lib/supabase.js'
+import { Routes, Route } from 'react-router-dom'
 import './App.css'
 
-// Page components
-import Login from './components/Login.jsx'
-import LineSelection from './components/LineSelection.jsx'
-import AreaSelection from './components/AreaSelection.jsx'
-import ChecklistForm from './components/ChecklistForm.jsx'
-import DamageReport from './components/DamageReport.jsx'
-import AreaLeadVerification from './components/AreaLeadVerification.jsx'
-import Dashboard from './components/Dashboard.jsx'
+// Pages
+import IndexPage from './pages/IndexPage.jsx'
+import LineSelectPage from './pages/LineSelectPage.jsx'
+import ControlPage from './pages/ControlPage.jsx'
+import PreCleanPage from './pages/PreCleanPage.jsx'
+import PostCleanPage from './pages/PostCleanPage.jsx'
+import HandoverPage from './pages/HandoverPage.jsx'
+import VerifyPage from './pages/VerifyPage.jsx'
+import ReleasePage from './pages/ReleasePage.jsx'
+import DashboardPage from './pages/DashboardPage.jsx'
 
-// Layout component
-import Navbar from './components/Navbar.jsx'
-
-function ProtectedRoute({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const location = useLocation()
-
-  useEffect(() => {
-    let mounted = true
-    const checkAuth = async () => {
-      try {
-        const user = await getCurrentUser()
-        if (mounted) {
-          setUser(user)
-          setLoading(false)
-        }
-      } catch {
-        if (mounted) {
-          setUser(null)
-          setLoading(false)
-        }
-      }
-    }
-    checkAuth()
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    })
-
-    return () => {
-      mounted = false
-      subscription?.unsubscribe()
-    }
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner" />
-        <p>Loading...</p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />
-  }
-
-  return children
-}
-
+// Layout wrapper
 function Layout({ children }) {
   return (
     <div className="app-layout">
-      <Navbar />
       <main className="main-content">{children}</main>
     </div>
   )
 }
 
-/* ──────────────────────────────────────────────
-   App router
-   ────────────────────────────────────────────── */
+/**
+ * SaniExpert v2 -- Audit-Grade Sanitation Control System
+ * Router with 9 routes covering the full sanitation workflow:
+ * Landing -> Line Select -> Control Hub -> (PreClean | PostClean | Handover | Verify | Release) -> Dashboard
+ */
 export default function App() {
   return (
     <Layout>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <LineSelection />
-          </ProtectedRoute>
-        } />
-        <Route path="/line/:lineId/areas" element={
-          <ProtectedRoute>
-            <AreaSelection />
-          </ProtectedRoute>
-        } />
-        <Route path="/line/:lineId/area/:areaId/checklist/:phase" element={
-          <ProtectedRoute>
-            <ChecklistForm />
-          </ProtectedRoute>
-        } />
-        <Route path="/line/:lineId/damage-report" element={
-          <ProtectedRoute>
-            <DamageReport />
-          </ProtectedRoute>
-        } />
-        <Route path="/line/:lineId/verify" element={
-          <ProtectedRoute>
-            <AreaLeadVerification />
-          </ProtectedRoute>
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
+        <Route path="/" element={<IndexPage />} />
+        <Route path="/lines" element={<LineSelectPage />} />
+        <Route path="/control" element={<ControlPage />} />
+        <Route path="/pre-clean" element={<PreCleanPage />} />
+        <Route path="/post-clean" element={<PostCleanPage />} />
+        <Route path="/handover" element={<HandoverPage />} />
+        <Route path="/verify" element={<VerifyPage />} />
+        <Route path="/release" element={<ReleasePage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
       </Routes>
     </Layout>
   )
