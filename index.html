@@ -386,7 +386,7 @@ section{position:relative;z-index:1;}
     <path d="M 117,104 Q 136,84 117,64" stroke="rgba(201,168,76,0.44)" stroke-width="1.3" fill="none" stroke-linecap="round"/>
     <circle cx="117" cy="104" r="2.5" fill="url(#lgNode)"/>
     <path d="M117,120 C117,120 109,133 109,140 C109,146.5 112.5,150 117,150 C121.5,150 125,146.5 125,140 C125,133 117,120 117,120Z" fill="rgba(201,168,76,0.45)"/>
-    <text x="84" y="138" font-family="Georgia,'Times New Roman',serif" font-size="80" font-weight="700" text-anchor="middle" fill="url(#lgFLetter)" filter="url(#lgGlowF)">F</text>
+    <text x="80" y="118" font-family="Georgia,'Times New Roman',serif" font-size="80" font-weight="700" text-anchor="middle" dominant-baseline="auto" fill="url(#lgFLetter)" filter="url(#lgGlowF)">F</text>
   </symbol>
 </defs>
 </svg>
@@ -731,6 +731,4 @@ function toggleSup(){if(S.screen==='s-sup')goScreen(S.prev||'s-tasks');else goSc
 function openDemo(){document.getElementById('demo-overlay').classList.add('open');document.body.style.overflow='hidden';goScreen('s-splash');buildOps();buildOvGrid();setTimeout(()=>goScreen('s-login'),2400);}
 function closeDemo(){document.getElementById('demo-overlay').classList.remove('open');document.body.style.overflow='';S.op=null;S.zone=null;S.checked.clear();S.taskDone=false;S.sigDone=false;if(S.timerInt){clearInterval(S.timerInt);S.timerInt=null;}}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDemo();});
-</script>
-</body>
-</html>
+<
