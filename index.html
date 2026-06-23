@@ -1,17 +1,736 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#1a5f2a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <link rel="manifest" href="/manifest.json" />
-    <title>SaniExpert Digital Checklist</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ferrero — Sanitation Intelligence Platform · Pilot 2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --gold:#C9A84C;--gold-l:#E8D5A3;--gold-d:#8B6914;--gold-pale:#F5EDD8;--gold-mid:#D4B870;
+  --bg:#060606;--bg2:#0E0E0E;--bg3:#141414;--bcard:#0C0C0C;
+  --line:rgba(201,168,76,.15);--line-bright:rgba(201,168,76,.35);
+  --cream:#F5F0E8;--cream-d:#A89E8C;--cream-dim:#6B6358;
+  --app-bg:#07070F;--app-s:#101018;--app-s2:#181826;--app-line:rgba(255,255,255,.06);
+  --green:#2ECC71;--red:#E74C3C;--amber:#F39C12;
+  --ease-spring:cubic-bezier(0.16,1,0.3,1);--ease-out:cubic-bezier(0.22,1,0.36,1);
+  color-scheme:dark;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--cream);font-family:Georgia,"Palatino Linotype","Times New Roman",serif;line-height:1.7;overflow-x:hidden;}
+body::before{content:"";position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5;}
+#scroll-progress{position:fixed;top:0;left:0;height:2px;width:0%;background:linear-gradient(to right,var(--gold-d),var(--gold),var(--gold-l));z-index:9000;transition:width .05s linear;box-shadow:0 0 8px rgba(201,168,76,.5);}
+#intro-overlay{position:fixed;inset:0;z-index:8000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;}
+#intro-overlay.out{animation:introOut .9s var(--ease-out) forwards;}
+@keyframes introOut{0%{clip-path:inset(0 0 0 0);}100%{clip-path:inset(0 0 100% 0);}}
+.intro-logo{width:72px;height:82px;filter:drop-shadow(0 0 24px rgba(201,168,76,.6));animation:introLogoPop .6s var(--ease-spring) .2s both;}
+@keyframes introLogoPop{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+.intro-name{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.72rem;letter-spacing:.48em;text-transform:uppercase;color:var(--gold);margin-top:1.4rem;animation:introFadeUp .5s var(--ease-out) .5s both;}
+.intro-line{width:0;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin-top:.9rem;animation:introLine .6s var(--ease-out) .7s both;}
+@keyframes introLine{to{width:120px;}}
+@keyframes introFadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.cursor-dot{position:fixed;pointer-events:none;z-index:7999;border-radius:50%;background:var(--gold);transform:translate(-50%,-50%);transition:width .15s,height .15s,opacity .15s;}
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.2rem 3.5rem;background:rgba(6,6,6,0);backdrop-filter:blur(0px);border-bottom:1px solid transparent;transition:background .5s,backdrop-filter .5s,border-color .5s;}
+nav.scrolled{background:rgba(6,6,6,.93);backdrop-filter:blur(24px);border-color:var(--line);}
+.nav-brand{display:flex;align-items:center;gap:.9rem;}
+.nav-logo-wrap{width:40px;height:44px;flex-shrink:0;filter:drop-shadow(0 0 10px rgba(201,168,76,.40));transition:filter .4s ease,transform .35s cubic-bezier(0.16,1,0.3,1);cursor:pointer;}
+.nav-logo-wrap svg{width:100%;height:100%;}
+.nav-names{display:flex;flex-direction:column;gap:.12rem;}
+.nav-name{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.68rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold-l);font-weight:600;line-height:1;}
+.nav-sub{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:var(--cream-dim);line-height:1;}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.nav-pilot{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-d);border:1px solid var(--gold-d);padding:.28rem .9rem;}
+.nav-demo-btn{display:inline-flex;align-items:center;gap:.5rem;padding:.55rem 1.4rem;background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;border:none;cursor:pointer;transition:opacity .2s,transform .2s;}
+.nav-demo-btn:hover{opacity:.85;transform:translateY(-1px);}
+@media(max-width:680px){nav{padding:1rem 1.4rem;}.nav-sub,.nav-pilot{display:none;}}
+.load-in{opacity:0;transform:translateY(22px);}
+.load-in.fired{animation:loadIn var(--dur,0.9s) var(--ease-spring) var(--delay,0s) forwards;}
+@keyframes loadIn{to{opacity:1;transform:translateY(0);}}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:9rem 2rem 7rem;position:relative;overflow:hidden;}
+#hero-canvas{position:absolute;inset:0;pointer-events:none;z-index:0;}
+.hero-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:min(80vw,800px);height:min(80vw,800px);border-radius:50%;background:radial-gradient(ellipse,rgba(201,168,76,.07) 0%,rgba(201,168,76,.02) 40%,transparent 70%);pointer-events:none;animation:glowPulse 6s ease-in-out infinite;}
+@keyframes glowPulse{0%,100%{opacity:.7}50%{opacity:1;}}
+.hero-ring-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;will-change:transform;}
+.ring{position:absolute;top:50%;left:50%;border-radius:50%;transform:translate(-50%,-50%);}
+.ring-1{width:540px;height:540px;border:1px solid rgba(201,168,76,.14);animation:spinCW 38s linear infinite;}
+.ring-1::before{content:"";position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 16px 4px rgba(201,168,76,.6);}
+.ring-2{width:740px;height:740px;border:1px solid rgba(201,168,76,.07);animation:spinCCW 55s linear infinite;}
+.ring-3{width:980px;height:980px;border:1px solid rgba(201,168,76,.035);animation:spinCW 80s linear infinite;}
+@keyframes spinCW{to{transform:translate(-50%,-50%) rotate(360deg);}}
+@keyframes spinCCW{to{transform:translate(-50%,-50%) rotate(-360deg);}}
+.hero-content{position:relative;z-index:1;}
+.hero-eyebrow{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.68rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:2rem;display:flex;align-items:center;gap:1.2rem;justify-content:center;}
+.hero-eyebrow::before,.hero-eyebrow::after{content:"";width:48px;height:1px;background:linear-gradient(to right,transparent,var(--gold));}
+.hero-eyebrow::after{background:linear-gradient(to left,transparent,var(--gold));}
+.hero-logo-hero{display:inline-flex;align-items:center;justify-content:center;width:90px;height:102px;margin-bottom:1.8rem;filter:drop-shadow(0 0 24px rgba(201,168,76,.35));animation:hexLogoPulse 3s ease-in-out infinite;}
+@keyframes hexLogoPulse{0%{filter:drop-shadow(0 0 16px rgba(201,168,76,.25));}50%{filter:drop-shadow(0 0 30px rgba(232,213,163,.50)) drop-shadow(0 0 60px rgba(201,168,76,.18));}100%{filter:drop-shadow(0 0 16px rgba(201,168,76,.25));}}
+.hero-title{font-size:clamp(2.8rem,6.5vw,5.8rem);font-weight:400;line-height:1.08;letter-spacing:-.02em;color:var(--cream);margin-bottom:1.2rem;}
+.hero-title em{font-style:italic;background:linear-gradient(135deg,var(--gold-d) 0%,var(--gold) 40%,var(--gold-l) 70%,var(--gold) 100%);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmerText 4s ease-in-out infinite;}
+@keyframes shimmerText{0%,100%{background-position:0% 50%;}50%{background-position:100% 50%;}}
+.hero-sub{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:clamp(1rem,2vw,1.18rem);color:var(--cream-d);max-width:520px;margin:0 auto 3.5rem;line-height:1.85;font-weight:300;}
+.hero-cta-row{display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap;justify-content:center;}
+.btn-demo-hero{display:inline-flex;align-items:center;gap:.8rem;padding:1.05rem 2.6rem;background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.84rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;border:none;cursor:pointer;position:relative;overflow:hidden;transition:transform .25s var(--ease-spring),box-shadow .25s;}
+.btn-demo-hero:hover{box-shadow:0 8px 32px rgba(201,168,76,.3);}
+.btn-ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.25);transform:scale(0);animation:rippleAnim .6s linear;pointer-events:none;}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0;}}
+.play-circle{width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:.6rem;}
+.btn-outline-hero{display:inline-flex;align-items:center;padding:1.05rem 2.4rem;background:transparent;color:var(--gold-l);border:1px solid rgba(201,168,76,.35);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.84rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:border-color .3s,color .3s,transform .25s var(--ease-spring);}
+.btn-outline-hero:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);}
+.hero-scroll-indicator{position:absolute;bottom:2.8rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.6rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:var(--cream-dim);animation:scrollBob 2.5s ease-in-out infinite;}
+.scroll-line{width:1px;height:52px;background:linear-gradient(to bottom,var(--gold-d),transparent);}
+@keyframes scrollBob{0%,100%{opacity:.4;transform:translateX(-50%) translateY(0);}50%{opacity:.8;transform:translateX(-50%) translateY(4px);}}
+.divider{display:flex;align-items:center;gap:1.8rem;padding:0 3.5rem;opacity:.35;}
+.div-line{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);}
+.div-diamond{width:6px;height:6px;background:var(--gold);transform:rotate(45deg);flex-shrink:0;}
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);position:relative;z-index:1;}
+@media(max-width:640px){.stats-strip{grid-template-columns:repeat(2,1fr);}}
+.stat-cell{background:var(--bcard);padding:2.8rem 2rem;text-align:center;position:relative;overflow:hidden;transition:background .4s,transform .3s var(--ease-spring);}
+.stat-cell:hover{background:#0F0F0F;transform:translateY(-2px);}
+.stat-num{font-size:clamp(2.4rem,4vw,3.4rem);font-weight:400;background:linear-gradient(150deg,var(--gold-d),var(--gold),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:.6rem;display:block;}
+.stat-lbl{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cream-dim);}
+[data-reveal]{opacity:0;transform:translateY(28px);}
+[data-reveal].vis{animation:revealUp .8s var(--ease-spring) var(--rd,0s) forwards;}
+@keyframes revealUp{to{opacity:1;transform:translateY(0);}}
+[data-clip]{clip-path:inset(0 0 100% 0);opacity:0;}
+[data-clip].vis{animation:clipReveal .9s var(--ease-spring) var(--rd,0s) forwards;}
+@keyframes clipReveal{to{clip-path:inset(0 0 0% 0);opacity:1;}}
+[data-stagger]>*{opacity:0;transform:translateY(22px);}
+[data-stagger].vis>*{animation:revealUp .7s var(--ease-spring) calc(var(--si,0)*0.08s) forwards;}
+[data-stagger].vis>*:nth-child(1){--si:0;}[data-stagger].vis>*:nth-child(2){--si:1;}[data-stagger].vis>*:nth-child(3){--si:2;}[data-stagger].vis>*:nth-child(4){--si:3;}[data-stagger].vis>*:nth-child(5){--si:4;}[data-stagger].vis>*:nth-child(6){--si:5;}
+section{position:relative;z-index:1;}
+.si{max-width:1200px;margin:0 auto;padding:8rem 2.5rem;}
+.sec-eye{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.65rem;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;display:flex;align-items:center;gap:.8rem;}
+.sec-eye::before{content:"";display:inline-block;width:24px;height:1px;background:linear-gradient(to right,var(--gold-d),var(--gold));}
+.sec-h{font-size:clamp(2rem,3.8vw,3.2rem);font-weight:400;line-height:1.18;color:var(--cream);margin-bottom:1.6rem;letter-spacing:-.015em;}
+.sec-h em{font-style:italic;background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.sec-lead{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:1.05rem;color:var(--cream-d);max-width:600px;line-height:1.9;font-weight:300;}
+.feat-bg{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 50%,var(--bg) 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:4.5rem;}
+@media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr);}}@media(max-width:560px){.feat-grid{grid-template-columns:1fr;}}
+.feat-card{background:var(--bcard);padding:2.8rem 2.4rem;position:relative;overflow:hidden;transition:background .4s,transform .15s ease,box-shadow .3s;transform-style:preserve-3d;will-change:transform;}
+.feat-card::before{content:"";position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(201,168,76,.06),transparent);transition:left .5s var(--ease-out);pointer-events:none;}
+.feat-card:hover::before{left:150%;}
+.feat-card:hover{background:#0F0F0F;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.feat-icon-wrap{width:3.2rem;height:3.2rem;background:linear-gradient(135deg,rgba(139,105,20,.2),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.2);display:flex;align-items:center;justify-content:center;font-size:1.25rem;margin-bottom:1.6rem;transition:border-color .3s,transform .3s var(--ease-spring);}
+.feat-card:hover .feat-icon-wrap{border-color:rgba(201,168,76,.45);transform:scale(1.1) rotate(-5deg);}
+.feat-t{font-size:1.05rem;font-weight:400;color:var(--gold-l);margin-bottom:.7rem;}
+.feat-d{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.85rem;color:var(--cream-d);line-height:1.85;}
+.demo-banner{margin-top:4.5rem;padding:3rem 3.5rem;background:linear-gradient(135deg,#0A0A07,#111109);border:1px solid rgba(201,168,76,.25);display:flex;align-items:center;justify-content:space-between;gap:2.5rem;flex-wrap:wrap;position:relative;overflow:hidden;}
+.demo-banner::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(201,168,76,.12),transparent);background-size:200% 100%;animation:bannerSweep 4s ease-in-out infinite;pointer-events:none;}
+@keyframes bannerSweep{0%,100%{background-position:200% 0;}50%{background-position:-200% 0;}}
+.demo-banner-t h3{font-size:1.6rem;font-weight:400;color:var(--gold-l);margin-bottom:.6rem;position:relative;z-index:1;}
+.demo-banner-t p{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.88rem;color:var(--cream-d);line-height:1.75;max-width:520px;position:relative;z-index:1;}
+.btn-demo-banner{display:inline-flex;align-items:center;gap:.8rem;padding:1.1rem 2.8rem;flex-shrink:0;background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.86rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;transition:transform .25s var(--ease-spring),opacity .2s;position:relative;z-index:1;white-space:nowrap;overflow:hidden;}
+.btn-demo-banner:hover{transform:translateY(-2px) scale(1.02);opacity:.9;}
+.adv-bg{background:linear-gradient(180deg,var(--bg2) 0%,var(--bg3) 60%,var(--bg2) 100%);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.adv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:4rem;}
+@media(max-width:1100px){.adv-grid{grid-template-columns:repeat(3,1fr);}}@media(max-width:650px){.adv-grid{grid-template-columns:repeat(2,1fr);}}
+.adv-card{background:var(--bcard);padding:2.4rem 2rem;position:relative;overflow:hidden;transition:background .35s,transform .25s var(--ease-spring);cursor:default;}
+.adv-card:hover{background:#101010;transform:translateY(-4px);}
+.adv-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,transparent,var(--gold),transparent);opacity:0;transition:opacity .35s;}
+.adv-card:hover::before{opacity:1;}
+.adv-ico{font-size:1.8rem;margin-bottom:1.2rem;display:block;}
+.adv-t{font-size:.92rem;font-weight:600;color:var(--gold-l);margin-bottom:.55rem;}
+.adv-d{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.78rem;color:var(--cream-dim);line-height:1.8;}
+.adv-tag{display:inline-flex;align-items:center;gap:.3rem;margin-top:.9rem;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--green);background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.2);padding:.2rem .6rem;border-radius:100px;}
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:4rem;}
+@media(max-width:760px){.tech-grid{grid-template-columns:repeat(2,1fr);}}@media(max-width:480px){.tech-grid{grid-template-columns:1fr;}}
+.tech-cell{background:var(--bcard);display:flex;align-items:center;gap:1.2rem;padding:1.4rem 1.8rem;transition:background .3s,transform .2s var(--ease-spring);}
+.tech-cell:hover{background:#0D0D0D;transform:translateX(4px);}
+.tech-icon-c{font-size:1.5rem;flex-shrink:0;}
+.tech-info h5{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.88rem;font-weight:600;color:var(--cream);margin-bottom:.2rem;}
+.tech-info p{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.74rem;color:var(--cream-dim);}
+.cta-section{text-align:center;padding:9rem 2rem;position:relative;overflow:hidden;}
+.cta-glow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,.055) 0%,transparent 65%);pointer-events:none;}
+.cta-rule{width:72px;height:1px;background:linear-gradient(to right,transparent,var(--gold),transparent);margin:2rem auto;}
+.cta-quote{font-size:clamp(1.35rem,2.8vw,2.1rem);font-style:italic;color:var(--cream-d);max-width:680px;margin:0 auto 3.5rem;line-height:1.55;}
+.cta-quote strong{font-style:normal;font-weight:400;background:linear-gradient(135deg,var(--gold-d),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.pg-footer{border-top:1px solid var(--line);padding:2.8rem 3.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;}
+.footer-brand-row{display:flex;align-items:center;gap:.8rem;}
+.footer-logo-wrap{width:26px;height:30px;}
+.footer-logo-wrap svg{width:100%;height:100%;}
+.footer-name{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-d);}
+.footer-copy{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.68rem;color:#3A3A3A;}
+.footer-conf{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:#2E2E2E;border:1px solid #222;padding:.28rem .8rem;}
+#demo-overlay{position:fixed;inset:0;z-index:9999;background:var(--app-bg);display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden;opacity:0;pointer-events:none;transform:scale(.96);filter:blur(8px);transition:opacity .5s var(--ease-out),transform .5s var(--ease-spring),filter .5s var(--ease-out);}
+#demo-overlay.open{opacity:1;pointer-events:auto;transform:scale(1);filter:blur(0);}
+.app-hdr{background:rgba(7,7,15,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--app-line);padding:.8rem 1.6rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;z-index:10;position:relative;}
+.app-hdr-l{display:flex;align-items:center;gap:.8rem;}
+.app-logo-wrap{width:32px;height:36px;flex-shrink:0;}
+.app-logo-wrap svg{width:100%;height:100%;}
+.app-brand-name{font-size:.92rem;font-weight:700;letter-spacing:.04em;color:var(--gold-l);line-height:1;}
+.app-brand-sub{font-size:.56rem;color:#444;letter-spacing:.12em;text-transform:uppercase;}
+.app-hdr-c{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);}
+.zone-pill{font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.18);padding:.22rem .8rem;border-radius:100px;display:none;white-space:nowrap;}
+.zone-pill.show{display:block;}
+.app-hdr-r{display:flex;align-items:center;gap:.7rem;}
+.app-clock{font-size:.72rem;color:#555;font-variant-numeric:tabular-nums;}
+#sup-toggle{display:none;padding:.3rem .85rem;background:transparent;border:1px solid rgba(201,168,76,.25);color:rgba(201,168,76,.7);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background .2s,color .2s;}
+#sup-toggle:hover{background:rgba(201,168,76,.08);color:var(--gold-l);}
+#sup-toggle.active{background:rgba(201,168,76,.12);border-color:var(--gold);color:var(--gold);}
+#sup-toggle.show{display:block;}
+.exit-btn{padding:.3rem .85rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:#555;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:color .2s,background .2s;}
+.exit-btn:hover{color:var(--cream-d);background:rgba(255,255,255,.05);}
+.app-body{flex:1;overflow:hidden;position:relative;}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:2rem;opacity:0;pointer-events:none;transform:translateX(32px) scale(.98);transition:opacity .4s var(--ease-out),transform .4s var(--ease-spring);}
+.screen.active{opacity:1;pointer-events:auto;transform:translateX(0) scale(1);}
+.screen.exit-left{opacity:0;transform:translateX(-32px) scale(.98);}
+.screen::-webkit-scrollbar{width:3px;}
+.screen::-webkit-scrollbar-thumb{background:rgba(201,168,76,.2);}
+#s-splash{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 40%,rgba(201,168,76,.07) 0%,transparent 65%);}
+.splash-logo-ring{width:110px;height:110px;border-radius:50%;border:1px solid rgba(201,168,76,.15);display:flex;align-items:center;justify-content:center;margin-bottom:2rem;animation:splashRing 3s ease-in-out infinite;}
+@keyframes splashRing{0%,100%{box-shadow:0 0 40px rgba(201,168,76,.08);}50%{box-shadow:0 0 60px rgba(201,168,76,.15);}}
+.splash-hex-inner{width:70px;height:80px;filter:drop-shadow(0 0 20px rgba(201,168,76,.40));}
+.splash-name{font-size:3.8rem;font-weight:700;letter-spacing:.04em;color:var(--cream);margin-bottom:.35rem;}
+.splash-tagline{font-size:.88rem;color:#555;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.4rem;}
+.splash-for{font-size:.72rem;color:var(--gold-d);letter-spacing:.16em;text-transform:uppercase;margin-bottom:2.8rem;}
+.splash-dots{display:flex;gap:.45rem;margin-bottom:1.8rem;}
+.s-dot{width:7px;height:7px;border-radius:50%;background:rgba(201,168,76,.18);animation:sdot 1.5s ease-in-out infinite;}
+.s-dot:nth-child(2){animation-delay:.18s;}.s-dot:nth-child(3){animation-delay:.36s;}
+@keyframes sdot{0%,80%,100%{background:rgba(201,168,76,.18);}40%{background:var(--gold);}}
+.splash-v{font-size:.6rem;color:#2A2A2A;letter-spacing:.14em;text-transform:uppercase;}
+.scr-title{font-size:1.5rem;font-weight:600;color:var(--cream);margin-bottom:.35rem;}
+.scr-sub{font-size:.83rem;color:#555;margin-bottom:2rem;}
+.btn-back{display:inline-flex;align-items:center;gap:.45rem;background:none;border:none;color:#555;font-size:.78rem;cursor:pointer;padding:.35rem 0;margin-bottom:1.8rem;transition:color .2s,transform .2s var(--ease-spring);}
+.btn-back:hover{color:var(--cream-d);transform:translateX(-3px);}
+.btn-primary-app{width:100%;padding:1rem;background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;font-size:.88rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;border:none;cursor:pointer;border-radius:3px;opacity:.35;pointer-events:none;transition:opacity .25s,transform .2s var(--ease-spring);position:relative;overflow:hidden;}
+.btn-primary-app.on{opacity:1;pointer-events:auto;}
+.btn-primary-app.on:hover{opacity:.88;transform:translateY(-1px);}
+.op-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:.75rem;margin-bottom:2rem;}
+.op-card{background:var(--app-s);border:2px solid var(--app-line);border-radius:8px;padding:1.1rem .9rem;display:flex;flex-direction:column;align-items:center;gap:.55rem;cursor:pointer;transition:border-color .25s,background .25s,transform .2s var(--ease-spring);}
+.op-card:hover{background:var(--app-s2);transform:translateY(-3px);}
+.op-card.sel{border-color:var(--gold);background:rgba(201,168,76,.06);}
+.op-av{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1A1A28,#252538);border:2px solid var(--app-line);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:var(--gold);}
+.op-nm{font-size:.83rem;font-weight:500;color:var(--cream);text-align:center;}
+.op-rl{font-size:.65rem;color:#444;text-align:center;}
+.zone-list{display:flex;flex-direction:column;gap:.7rem;margin-top:1.4rem;}
+.zone-row{background:var(--app-s);border:2px solid var(--app-line);border-radius:10px;padding:1.3rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1.4rem;cursor:pointer;transition:border-color .25s,background .25s,transform .2s var(--ease-spring);}
+.zone-row:hover{background:var(--app-s2);transform:translateX(6px);}
+.zrl{display:flex;align-items:center;gap:1.1rem;}
+.zone-ico{width:50px;height:50px;border-radius:8px;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.z-name{font-size:.96rem;font-weight:600;color:var(--cream);margin-bottom:.18rem;}
+.z-desc{font-size:.75rem;color:#555;}
+.zrr{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem;}
+.z-count{font-size:.76rem;color:var(--gold);font-weight:600;}
+.z-badge{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .6rem;border-radius:100px;}
+.z-badge.pend{background:rgba(243,156,18,.12);color:var(--amber);}.z-badge.clear{background:rgba(46,204,113,.1);color:var(--green);}
+.zone-chevron{color:#333;font-size:.8rem;}
+.task-hdr-card{background:var(--app-s);border:1px solid var(--app-line);border-radius:10px;padding:1.3rem 1.6rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem;}
+.thc h3{font-size:1rem;font-weight:600;color:var(--cream);margin-bottom:.2rem;}
+.thc p{font-size:.74rem;color:#555;}
+.thc-num{font-size:1.7rem;font-weight:700;background:linear-gradient(135deg,var(--gold-d),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;}
+.thc-lbl{font-size:.6rem;color:#444;text-transform:uppercase;letter-spacing:.1em;}
+.shift-chip{display:inline-flex;align-items:center;gap:.4rem;background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.18);padding:.28rem .8rem;border-radius:100px;font-size:.66rem;color:var(--gold);margin-bottom:1rem;}
+.tl-hdr{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:#333;margin-bottom:.75rem;}
+.task-row{background:var(--app-s);border:1px solid var(--app-line);border-radius:8px;padding:1rem 1.25rem;display:flex;align-items:center;gap:1rem;margin-bottom:.55rem;transition:border-color .25s,background .25s,transform .2s var(--ease-spring);}
+.task-row.t-active{border-color:rgba(201,168,76,.35);background:rgba(201,168,76,.04);cursor:pointer;}
+.task-row.t-done{opacity:.5;}
+.task-row.t-active:hover{background:rgba(201,168,76,.07);transform:translateX(4px);}
+.t-ico{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.t-ico.done{background:rgba(46,204,113,.12);}.t-ico.active{background:rgba(201,168,76,.12);}.t-ico.pending{background:rgba(255,255,255,.03);}
+.t-info{flex:1;}
+.t-name{font-size:.88rem;font-weight:500;color:var(--cream);margin-bottom:.18rem;}
+.t-time{font-size:.7rem;color:#555;}
+.t-chev{font-size:.78rem;color:#2E2E2E;}
+.cl-hdr{background:var(--app-s);border:1px solid var(--app-line);border-radius:10px;padding:1.3rem 1.5rem;margin-bottom:1.4rem;}
+.cl-hdr-title{font-size:1rem;font-weight:600;color:var(--cream);margin-bottom:.55rem;}
+.cl-meta-row{display:flex;align-items:center;gap:1.4rem;flex-wrap:wrap;}
+.cl-meta-i{display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#555;}
+.cl-prog-row{display:flex;align-items:center;gap:.8rem;margin-top:.9rem;}
+.cl-bar{flex:1;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.cl-bar-fill{height:100%;border-radius:3px;background:linear-gradient(to right,var(--gold-d),var(--gold),var(--gold-l));transition:width .45s var(--ease-spring);}
+.cl-pct{font-size:.73rem;color:var(--gold);font-weight:600;min-width:2.8rem;text-align:right;}
+.cl-items{display:flex;flex-direction:column;gap:.48rem;margin-bottom:1.5rem;}
+.cl-row{background:var(--app-s);border:1px solid var(--app-line);border-radius:8px;padding:.95rem 1.2rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:border-color .25s,background .25s,transform .15s var(--ease-spring);user-select:none;}
+.cl-row:hover{background:var(--app-s2);}
+.cl-row.checked{border-color:rgba(46,204,113,.25);background:rgba(46,204,113,.04);}
+.cl-cb{width:24px;height:24px;border-radius:5px;border:2px solid #2A2A3A;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .2s,background .2s;}
+.cl-row.checked .cl-cb{border-color:var(--green);background:var(--green);animation:cbPop .4s var(--ease-spring) forwards;}
+@keyframes cbPop{0%{transform:scale(1);}50%{transform:scale(1.3);}100%{transform:scale(1);}}
+.cl-cb-check{opacity:0;color:#fff;font-size:.75rem;transition:opacity .15s;}
+.cl-row.checked .cl-cb-check{opacity:1;}
+.cl-txt{flex:1;}
+.cl-lbl{font-size:.86rem;font-weight:500;color:var(--cream);margin-bottom:.12rem;transition:color .2s;}
+.cl-row.checked .cl-lbl{color:#555;text-decoration:line-through;}
+.cl-note{font-size:.68rem;color:#3A3A3A;}
+.cl-ts{font-size:.65rem;color:var(--green);opacity:0;transition:opacity .25s;white-space:nowrap;}
+.cl-row.checked .cl-ts{opacity:1;}
+.btn-submit{width:100%;padding:1.1rem;background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;font-size:.9rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;border-radius:4px;opacity:.25;pointer-events:none;transition:opacity .3s,transform .2s var(--ease-spring);}
+.btn-submit.ready{opacity:1;pointer-events:auto;}
+.btn-submit.ready:hover{opacity:.88;transform:translateY(-1.5px);}
+.so-summary{background:var(--app-s);border:1px solid var(--app-line);border-radius:10px;padding:1.4rem 1.8rem;width:100%;text-align:left;margin:1.4rem 0;}
+.so-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--app-line);font-size:.83rem;}
+.so-row:last-child{border-bottom:none;}
+.so-lbl{color:#555;}.so-val{color:var(--cream);font-weight:500;}.so-val.g{color:var(--green);}
+.sig-area{width:100%;height:110px;border:2px dashed rgba(201,168,76,.22);border-radius:8px;background:rgba(201,168,76,.025);display:flex;align-items:center;justify-content:center;cursor:pointer;margin:1rem 0 1.6rem;transition:border-color .25s,background .25s;position:relative;overflow:hidden;}
+.sig-hint{font-size:.78rem;color:#3A3A3A;pointer-events:none;}
+.sig-canvas{position:absolute;inset:0;width:100%;height:100%;}
+#s-success{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:radial-gradient(ellipse at 50% 40%,rgba(46,204,113,.04) 0%,transparent 60%);}
+#confetti-canvas{position:absolute;inset:0;pointer-events:none;width:100%;height:100%;}
+.succ-ring{width:96px;height:96px;border-radius:50%;background:rgba(46,204,113,.1);border:2.5px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin-bottom:1.5rem;transform:scale(0);animation:ringPop .55s var(--ease-spring) .1s forwards;}
+@keyframes ringPop{to{transform:scale(1);}}
+.succ-title{font-size:1.9rem;font-weight:700;color:var(--green);margin-bottom:.45rem;}
+.succ-sub{font-size:.88rem;color:#555;margin-bottom:2rem;max-width:380px;}
+.succ-score{font-size:4.2rem;font-weight:700;background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1;margin-bottom:.3rem;}
+.succ-score-lbl{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:#333;margin-bottom:2rem;}
+.succ-dets{background:var(--app-s);border:1px solid var(--app-line);border-radius:10px;padding:1.1rem 1.8rem;width:100%;max-width:400px;text-align:left;margin-bottom:2rem;}
+.sd-r{display:flex;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid var(--app-line);font-size:.8rem;}
+.sd-r:last-child{border-bottom:none;}
+.sd-l{color:#444;}.sd-v{color:var(--cream);font-weight:500;}
+.sup-hdr-row{margin-bottom:1.4rem;}
+.sup-hdr-row h2{font-size:1.1rem;font-weight:700;color:var(--cream);margin-bottom:.2rem;}
+.sup-hdr-row p{font-size:.76rem;color:#444;}
+.ov-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.3rem;}
+@media(max-width:640px){.ov-grid{grid-template-columns:1fr;}}
+.ov-card{background:var(--app-s);border:1px solid var(--app-line);border-radius:8px;padding:1.2rem;transition:transform .2s var(--ease-spring);}
+.ov-card:hover{transform:translateY(-2px);}
+.ov-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem;}
+.ov-name{font-size:.82rem;font-weight:600;color:var(--cream);}
+.ov-badge{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .55rem;border-radius:100px;font-weight:700;}
+.ov-badge.good{background:rgba(46,204,113,.12);color:var(--green);}.ov-badge.warn{background:rgba(243,156,18,.12);color:var(--amber);}.ov-badge.crit{background:rgba(231,76,60,.12);color:var(--red);}
+.ov-score{font-size:2rem;font-weight:700;line-height:1;margin-bottom:.3rem;}
+.ov-score.good{color:var(--green);}.ov-score.warn{color:var(--amber);}.ov-score.crit{color:var(--red);}
+.ov-bar{height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;margin-bottom:.35rem;}
+.ov-bar-fill{height:100%;border-radius:2px;transition:width 1.2s var(--ease-out);}
+.ov-bar-fill.good{background:var(--green);}.ov-bar-fill.warn{background:var(--amber);}.ov-bar-fill.crit{background:var(--red);}
+.ov-tasks-txt{font-size:.65rem;color:#444;}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;}
+@media(max-width:640px){.charts-row{grid-template-columns:1fr;}}
+.ch-card{background:var(--app-s);border:1px solid var(--app-line);border-radius:8px;padding:1.1rem;}
+.ch-title{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#3A3A3A;margin-bottom:.9rem;}
+.ch-wrap{height:155px;position:relative;}
+.act-card{background:var(--app-s);border:1px solid var(--app-line);border-radius:8px;padding:1.1rem;}
+.act-hdr{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:#3A3A3A;margin-bottom:.75rem;}
+.act-item{display:flex;align-items:center;gap:.75rem;padding:.5rem 0;border-bottom:1px solid var(--app-line);}
+.act-item:last-child{border-bottom:none;}
+.act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.act-dot.g{background:var(--green);}.act-dot.a{background:var(--amber);}.act-dot.r{background:var(--red);}
+.act-txt{flex:1;font-size:.75rem;color:var(--cream);}
+.act-time{font-size:.65rem;color:#333;white-space:nowrap;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:rgba(201,168,76,.25);}
+</style>
+</head>
+<body>
+<div id="scroll-progress"></div>
+<div id="intro-overlay">
+  <div class="intro-logo"><svg viewBox="0 0 160 185" width="72" height="82"><use href="#s-logo"/></svg></div>
+  <div class="intro-name">Sanitra · Ferrero Pilot 2026</div>
+  <div class="intro-line"></div>
+</div>
+<svg width="0" height="0" style="position:absolute;overflow:hidden;" aria-hidden="true">
+<defs>
+  <linearGradient id="lgFrame" x1="18%" y1="0%" x2="82%" y2="100%">
+    <stop offset="0%" stop-color="#FFFBF0"/><stop offset="7%" stop-color="#F2DD78"/>
+    <stop offset="22%" stop-color="#D4B045"/><stop offset="42%" stop-color="#8B6914"/>
+    <stop offset="60%" stop-color="#9E7A1C"/><stop offset="78%" stop-color="#C9A84C"/>
+    <stop offset="90%" stop-color="#E8D5A3"/><stop offset="100%" stop-color="#D4B870"/>
+  </linearGradient>
+  <radialGradient id="lgSheen" cx="20%" cy="12%" r="88%" gradientUnits="objectBoundingBox">
+    <stop offset="0%" stop-color="rgba(255,253,230,0.28)"/><stop offset="35%" stop-color="rgba(255,245,190,0.06)"/>
+    <stop offset="100%" stop-color="rgba(0,0,0,0.22)"/>
+  </radialGradient>
+  <radialGradient id="lgInner" cx="50%" cy="38%" r="68%" gradientUnits="objectBoundingBox">
+    <stop offset="0%" stop-color="#2E2108"/><stop offset="35%" stop-color="#130F02"/>
+    <stop offset="100%" stop-color="#040302"/>
+  </radialGradient>
+  <linearGradient id="lgFLetter" x1="12%" y1="0%" x2="88%" y2="100%">
+    <stop offset="0%" stop-color="#FFF9EC"/><stop offset="18%" stop-color="#F2DC70"/>
+    <stop offset="48%" stop-color="#C9A84C"/><stop offset="80%" stop-color="#7A580E"/>
+    <stop offset="100%" stop-color="#B89030"/>
+  </linearGradient>
+  <radialGradient id="lgNode" cx="38%" cy="30%" r="70%">
+    <stop offset="0%" stop-color="#FFF5CC"/><stop offset="50%" stop-color="#D4B04A"/>
+    <stop offset="100%" stop-color="#7A5810"/>
+  </radialGradient>
+  <filter id="lgGlowF" x="-45%" y="-45%" width="190%" height="190%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="bloom"/>
+    <feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="halo"/>
+    <feMerge><feMergeNode in="bloom"/><feMergeNode in="halo"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="lgTopSpark" x="-180%" y="-180%" width="460%" height="460%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <symbol id="s-logo" viewBox="0 0 160 185" overflow="visible">
+    <polygon points="80,0 158,43 158,137 80,180 2,137 2,43" fill="none" stroke="rgba(201,168,76,0.06)" stroke-width="1"/>
+    <polygon points="80,3 155,44 155,136 80,177 5,136 5,44" fill="none" stroke="rgba(201,168,76,0.13)" stroke-width="1.2"/>
+    <circle cx="80" cy="3" r="1.5" fill="rgba(240,220,130,0.55)"/>
+    <circle cx="155" cy="44" r="1.2" fill="rgba(201,168,76,0.40)"/>
+    <circle cx="155" cy="136" r="1.2" fill="rgba(201,168,76,0.28)"/>
+    <circle cx="80" cy="177" r="1.5" fill="rgba(201,168,76,0.32)"/>
+    <circle cx="5" cy="136" r="1.2" fill="rgba(201,168,76,0.28)"/>
+    <circle cx="5" cy="44" r="1.2" fill="rgba(240,220,130,0.42)"/>
+    <path d="M80,8 L150,47 L150,133 L80,172 L10,133 L10,47 Z M80,30 L131,59 L131,121 L80,150 L29,121 L29,59 Z" fill="url(#lgFrame)" fill-rule="evenodd"/>
+    <polygon points="10,47 80,8 80,30 29,59" fill="rgba(255,253,230,0.52)"/>
+    <polygon points="80,8 150,47 131,59 80,30" fill="rgba(255,252,215,0.30)"/>
+    <polygon points="150,47 150,133 131,121 131,59" fill="rgba(255,235,150,0.05)"/>
+    <polygon points="150,133 80,172 80,150 131,121" fill="rgba(0,0,0,0.30)"/>
+    <polygon points="80,172 10,133 29,121 80,150" fill="rgba(0,0,0,0.48)"/>
+    <polygon points="10,133 10,47 29,59 29,121" fill="rgba(0,0,0,0.34)"/>
+    <path d="M80,8 L150,47 L150,133 L80,172 L10,133 L10,47 Z M80,30 L131,59 L131,121 L80,150 L29,121 L29,59 Z" fill="url(#lgSheen)" fill-rule="evenodd"/>
+    <polyline points="10,47 80,8 150,47" stroke="rgba(255,254,235,0.70)" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+    <polygon points="80,30 131,59 131,121 80,150 29,121 29,59" fill="url(#lgInner)"/>
+    <polygon points="80,30 131,59 131,121 80,150 29,121 29,59" fill="none" stroke="rgba(201,168,76,0.22)" stroke-width="1.2"/>
+    <circle cx="80" cy="8" r="10" fill="rgba(255,248,200,0.50)" filter="url(#lgTopSpark)"/>
+    <circle cx="80" cy="8" r="4.5" fill="rgba(255,252,225,0.88)"/>
+    <circle cx="80" cy="8" r="2.0" fill="#FFFEF5"/>
+    <line x1="43" y1="61" x2="43" y2="132" stroke="rgba(201,168,76,0.48)" stroke-width="0.9" stroke-linecap="square"/>
+    <g stroke="rgba(201,168,76,0.52)" stroke-width="0.9" fill="none" stroke-linecap="square">
+      <line x1="43" y1="68" x2="57" y2="68"/><line x1="43" y1="83" x2="60" y2="83"/>
+      <line x1="43" y1="98" x2="57" y2="98"/><line x1="43" y1="113" x2="60" y2="113"/>
+    </g>
+    <g><circle cx="43" cy="68" r="2.6" fill="url(#lgNode)"/><circle cx="43" cy="83" r="2.6" fill="url(#lgNode)"/>
+    <circle cx="43" cy="98" r="2.6" fill="url(#lgNode)"/><circle cx="43" cy="113" r="2.6" fill="url(#lgNode)"/></g>
+    <path d="M 117,104 Q 128,89 117,74" stroke="rgba(201,168,76,0.75)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <path d="M 117,104 Q 136,84 117,64" stroke="rgba(201,168,76,0.44)" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <circle cx="117" cy="104" r="2.5" fill="url(#lgNode)"/>
+    <path d="M117,120 C117,120 109,133 109,140 C109,146.5 112.5,150 117,150 C121.5,150 125,146.5 125,140 C125,133 117,120 117,120Z" fill="rgba(201,168,76,0.45)"/>
+    <text x="84" y="138" font-family="Georgia,'Times New Roman',serif" font-size="80" font-weight="700" text-anchor="middle" fill="url(#lgFLetter)" filter="url(#lgGlowF)">F</text>
+  </symbol>
+</defs>
+</svg>
+
+<div id="presentation">
+<nav id="main-nav">
+  <div class="nav-brand">
+    <div class="nav-logo-wrap"><svg viewBox="0 0 160 185"><use href="#s-logo"/></svg></div>
+    <div class="nav-names">
+      <div class="nav-name">Ferrero Sanitation</div>
+      <div class="nav-sub">Intelligence Platform</div>
+    </div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-pilot">Pilot · 2026</span>
+    <button class="nav-demo-btn" onclick="openDemo()">&#9654; Live Demo</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-glow"></div>
+  <div class="hero-ring-wrap" id="ring-wrap">
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-3"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-logo-hero load-in" style="--delay:.15s">
+      <svg viewBox="0 0 160 185" width="90" height="102"><use href="#s-logo"/></svg>
+    </div>
+    <p class="hero-eyebrow load-in" style="--delay:.3s">Presented exclusively for Ferrero</p>
+    <h1 class="hero-title load-in" style="--delay:.45s">Digital Sanitation<br><em id="scramble-target">Intelligence Platform</em></h1>
+    <p class="hero-sub load-in" style="--delay:.6s">A precision-built compliance ecosystem — purpose-engineered for Ferrero's factory floor. Replacing paper trails with real-time intelligence.</p>
+    <div class="hero-cta-row load-in" style="--delay:.75s">
+      <button class="btn-demo-hero magnetic" onclick="openDemo()"><span class="play-circle">&#9654;</span> Launch Live Demo</button>
+      <a href="#features" class="btn-outline-hero">Explore Features</a>
+    </div>
+  </div>
+  <div class="hero-scroll-indicator"><div class="scroll-line"></div><span>Scroll</span></div>
+</section>
+
+<div class="divider"><div class="div-line"></div><div class="div-diamond"></div><div class="div-line"></div></div>
+
+<div class="stats-strip" data-reveal>
+  <div class="stat-cell"><span class="stat-num" data-count="3">3</span><div class="stat-lbl">Pilot Tablets Deployed</div></div>
+  <div class="stat-cell"><span class="stat-num" data-count="100" data-suffix="%">100%</span><div class="stat-lbl">Offline Capable</div></div>
+  <div class="stat-cell"><span class="stat-num" data-count="2" data-prefix="&#8804;" data-suffix="s">&#8804;2s</span><div class="stat-lbl">Checklist Load Time</div></div>
+  <div class="stat-cell"><span class="stat-num" data-count="0">0</span><div class="stat-lbl">Paper Forms Required</div></div>
+</div>
+
+<section class="feat-bg" id="features">
+  <div class="si">
+    <p class="sec-eye" data-reveal>What we're building</p>
+    <h2 class="sec-h" data-reveal style="--rd:.05s">Six capabilities, <em>one platform</em></h2>
+    <div class="feat-grid" data-stagger>
+      <div class="feat-card tilt-card"><div class="feat-icon-wrap">&#10003;</div><h3 class="feat-t">Digital Checklists</h3><p class="feat-d">Structured ISO task flows on locked kiosk tablets. Operators complete tasks with GPS-stamped, timestamped records — zero paper.</p></div>
+      <div class="feat-card tilt-card"><div class="feat-icon-wrap">&#128225;</div><h3 class="feat-t">Offline-First Architecture</h3><p class="feat-d">Full functionality with zero WiFi. Data queues via local SQLite sync outbox and pushes automatically when connectivity restores.</p></div>
+      <div class="feat-card tilt-card"><div class="feat-icon-wrap">&#128274;</div><h3 class="feat-t">Locked Kiosk Mode</h3><p class="feat-d">Android Device Owner lockdown. Each tablet is zone-bound, single-app. No browser, no home screen, no distraction.</p></div>
+      <div class="feat-card tilt-card"><div class="feat-icon-wrap">&#128200;</div><h3 class="feat-t">Real-Time Dashboard</h3><p class="feat-d">Supervisors see live compliance across all zones. Automatic alerts fire on missed windows. Weekly reports in one click.</p></div>
+      <div class="feat-card tilt-card"><div class="feat-icon-wrap">&#127970;</div><h3 class="feat-t">Multi-Zone Management</h3><p class="feat-d">Per-zone, per-shift, per-operator compliance history — with complete tamper-evident audit trail for regulatory review.</p></div>
+      <div class="feat-card tilt-card"><div class="feat-icon-wrap">&#128279;</div><h3 class="feat-t">Supabase Backend</h3><p class="feat-d">Row-level security, realtime subscriptions, zero-trust auth. Production-grade Canadian infrastructure. Scales to enterprise.</p></div>
+    </div>
+    <div class="demo-banner" data-clip style="--rd:.1s">
+      <div class="demo-banner-t"><h3>The pilot app — live &amp; working now</h3><p>Walk the complete operator flow: login &#8594; zone selection &#8594; interactive ISO checklist &#8594; digital sign-off. Toggle Supervisor Mode to see live compliance charts.</p></div>
+      <button class="btn-demo-banner magnetic" onclick="openDemo()">&#9654; Launch Sanitra Demo</button>
+    </div>
+  </div>
+</section>
+
+<section class="adv-bg">
+  <div class="si">
+    <p class="sec-eye" data-reveal>Designed for humans, not just compliance</p>
+    <h2 class="sec-h" data-reveal style="--rd:.05s">Five reasons <em>operators love Sanitra</em></h2>
+    <p class="sec-lead" data-reveal style="--rd:.1s">Built to be picked up and used — on day one, with zero training overhead.</p>
+    <div class="adv-grid" data-stagger style="margin-top:4rem;">
+      <div class="adv-card tilt-card"><span class="adv-ico">&#128070;</span><div class="adv-t">Intuitive by Design</div><div class="adv-d">No manuals needed. Operators tap through every task in under 30 seconds.</div><div class="adv-tag">&#10003; User Friendly</div></div>
+      <div class="adv-card tilt-card"><span class="adv-ico">&#10024;</span><div class="adv-t">Fluid Transitions</div><div class="adv-d">Spring-physics animations — purposeful motion that guides the eye and feels premium.</div><div class="adv-tag">&#10003; Smooth Experience</div></div>
+      <div class="adv-card tilt-card"><span class="adv-ico">&#128272;</span><div class="adv-t">Enterprise Data Security</div><div class="adv-d">Row-level Supabase security, end-to-end encryption, zero-trust authentication.</div><div class="adv-tag">&#10003; Data Security &amp; Safety</div></div>
+      <div class="adv-card tilt-card"><span class="adv-ico">&#128737;&#65039;</span><div class="adv-t">Tamper-Evident Audit Trail</div><div class="adv-d">Locked kiosk mode with Device Owner controls and role-based access.</div><div class="adv-tag">&#10003; Fully Protected</div></div>
+      <div class="adv-card tilt-card"><span class="adv-ico">&#128245;</span><div class="adv-t">Unlimited Offline Storage</div><div class="adv-d">Works perfectly with zero WiFi. Auto-syncs to the cloud the moment connectivity returns.</div><div class="adv-tag">&#10003; Auto-Sync on Reconnect</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="si">
+    <p class="sec-eye" data-reveal>Technology foundation</p>
+    <h2 class="sec-h" data-reveal style="--rd:.05s">Built on <em>production-grade infrastructure</em></h2>
+    <p class="sec-lead" data-reveal style="--rd:.1s">No proprietary lock-in. Every component is industry-standard, auditable, and owned by you.</p>
+    <div class="tech-grid" data-stagger>
+      <div class="tech-cell"><span class="tech-icon-c">&#9889;</span><div class="tech-info"><h5>Next.js 14</h5><p>App Router · TypeScript · Edge-ready</p></div></div>
+      <div class="tech-cell"><span class="tech-icon-c">&#128272;</span><div class="tech-info"><h5>Supabase</h5><p>PostgreSQL · RLS · Realtime · CA-EAST</p></div></div>
+      <div class="tech-cell"><span class="tech-icon-c">&#128241;</span><div class="tech-info"><h5>PWA / Capacitor</h5><p>Android APK · Offline-first · Device Owner</p></div></div>
+      <div class="tech-cell"><span class="tech-icon-c">&#9729;&#65039;</span><div class="tech-info"><h5>Vercel</h5><p>Global CDN · Zero-downtime · Preview URLs</p></div></div>
+      <div class="tech-cell"><span class="tech-icon-c">&#127970;</span><div class="tech-info"><h5>Android MDM</h5><p>Device Owner · Lock-task · Managed Config</p></div></div>
+      <div class="tech-cell"><span class="tech-icon-c">&#128640;</span><div class="tech-info"><h5>Auto Deploy Agent</h5><p>Zero-touch deployment · Auto-rebuild · Live sync</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="cta-glow"></div>
+  <p class="sec-eye" data-reveal style="justify-content:center">Begin the pilot</p>
+  <div class="cta-rule"></div>
+  <p class="cta-quote" data-reveal style="--rd:.05s">"Ferrero sets the benchmark in chocolate.<br>Now let's set the benchmark in <strong>food-safety compliance.</strong>"</p>
+  <div data-reveal style="--rd:.1s;display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center;">
+    <button class="btn-demo-hero magnetic" onclick="openDemo()"><span class="play-circle">&#9654;</span> Launch Live Demo</button>
+    <a href="mailto:adarshsomankk94@gmail.com" class="btn-outline-hero">Contact SaniXperts</a>
+  </div>
+  <div class="cta-rule" style="margin-top:3rem;"></div>
+</section>
+
+<footer class="pg-footer">
+  <div class="footer-brand-row">
+    <div class="footer-logo-wrap"><svg viewBox="0 0 160 185"><use href="#s-logo"/></svg></div>
+    <span class="footer-name">SaniXperts Services Inc. · Hamilton, Ontario</span>
+  </div>
+  <div class="footer-copy">&#169; 2026 · Prepared exclusively for Ferrero · All rights reserved</div>
+  <div class="footer-conf">Confidential</div>
+</footer>
+</div>
+
+<div id="demo-overlay">
+  <div class="app-hdr">
+    <div class="app-hdr-l">
+      <div class="app-logo-wrap"><svg viewBox="0 0 160 185"><use href="#s-logo"/></svg></div>
+      <div><div class="app-brand-name">Sanitra</div><div class="app-brand-sub">ISO Sanitation Platform</div></div>
+    </div>
+    <div class="app-hdr-c"><div class="zone-pill" id="zone-pill"></div></div>
+    <div class="app-hdr-r">
+      <div class="app-clock" id="app-clk">08:47</div>
+      <button id="sup-toggle" onclick="toggleSup()">&#8862; Supervisor</button>
+      <button class="exit-btn" onclick="closeDemo()">&#10005; Exit</button>
+    </div>
+  </div>
+  <div class="app-body">
+    <div class="screen active" id="s-splash">
+      <div class="splash-logo-ring"><div class="splash-hex-inner"><svg viewBox="0 0 160 185" width="70" height="80"><use href="#s-logo"/></svg></div></div>
+      <div class="splash-name">Sanitra</div>
+      <div class="splash-tagline">Sanitation Intelligence Platform</div>
+      <div class="splash-for">Pilot Programme · Ferrero · Hamilton, ON</div>
+      <div class="splash-dots"><div class="s-dot"></div><div class="s-dot"></div><div class="s-dot"></div></div>
+      <div class="splash-v">v1.0.0 · Pilot Build · June 2026</div>
+    </div>
+    <div class="screen" id="s-login">
+      <div style="max-width:700px;margin:0 auto;width:100%;">
+        <div class="scr-title">Select Your Name</div>
+        <div class="scr-sub">Tap your name to log in to your shift</div>
+        <div class="op-grid" id="op-grid"></div>
+        <button class="btn-primary-app" id="login-btn" onclick="goZone()">Continue &#8594;</button>
+      </div>
+    </div>
+    <div class="screen" id="s-zone">
+      <div style="max-width:700px;margin:0 auto;width:100%;">
+        <button class="btn-back" onclick="goScreen('s-login')">&#8592; Back</button>
+        <div class="scr-title">Select Your Zone</div>
+        <div class="scr-sub">Choose the zone you are responsible for this shift</div>
+        <div class="zone-list" id="zone-list"></div>
+      </div>
+    </div>
+    <div class="screen" id="s-tasks">
+      <div style="max-width:740px;margin:0 auto;width:100%;">
+        <button class="btn-back" onclick="goScreen('s-zone')">&#8592; Change Zone</button>
+        <div class="task-hdr-card">
+          <div class="thc"><h3 id="th-zone-name">Zone A · Mixing Room</h3><p>Monday 23 June 2026</p></div>
+          <div><div class="thc-num" id="th-score">25%</div><div class="thc-lbl">Today's Compliance</div></div>
+        </div>
+        <div class="shift-chip">&#127749; Morning Shift &nbsp;·&nbsp; 06:00 – 14:00</div>
+        <div class="tl-hdr">Today's Sanitation Tasks</div>
+        <div id="task-list-el"></div>
+      </div>
+    </div>
+    <div class="screen" id="s-check">
+      <div style="max-width:760px;margin:0 auto;width:100%;">
+        <button class="btn-back" onclick="goScreen('s-tasks')">&#8592; Task Hub</button>
+        <div class="cl-hdr">
+          <div class="cl-hdr-title" id="cl-task-nm">Pre-Production Sanitation Check</div>
+          <div class="cl-meta-row">
+            <span class="cl-meta-i">&#128205; <span id="cl-zone">Zone A</span></span>
+            <span class="cl-meta-i">&#128100; <span id="cl-op">—</span></span>
+            <span class="cl-meta-i">&#9201; <span id="cl-timer">00:00</span></span>
+          </div>
+          <div class="cl-prog-row"><div class="cl-bar"><div class="cl-bar-fill" id="cl-fill" style="width:0%"></div></div><div class="cl-pct" id="cl-pct-txt">0 / 10</div></div>
+        </div>
+        <div class="cl-items" id="cl-items-el"></div>
+        <button class="btn-submit" id="cl-submit" onclick="goSignOff()">Submit &amp; Sign Off</button>
+      </div>
+    </div>
+    <div class="screen" id="s-signoff">
+      <div style="max-width:540px;margin:0 auto;width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div style="font-size:2.2rem;margin-bottom:.5rem;">&#128203;</div>
+        <div class="scr-title">Task Complete</div>
+        <div class="scr-sub">Review and confirm your digital sign-off</div>
+        <div class="so-summary">
+          <div class="so-row"><span class="so-lbl">Task</span><span class="so-val" id="so-task">—</span></div>
+          <div class="so-row"><span class="so-lbl">Zone</span><span class="so-val" id="so-zone">—</span></div>
+          <div class="so-row"><span class="so-lbl">Operator</span><span class="so-val" id="so-op">—</span></div>
+          <div class="so-row"><span class="so-lbl">Items Completed</span><span class="so-val g">10 / 10 &#10003;</span></div>
+          <div class="so-row"><span class="so-lbl">Time Taken</span><span class="so-val" id="so-time">—</span></div>
+          <div class="so-row"><span class="so-lbl">Timestamp</span><span class="so-val" id="so-ts">—</span></div>
+        </div>
+        <div class="sig-area" id="sig-area" onclick="doSign()">
+          <span class="sig-hint" id="sig-hint">&#128070; Tap here to confirm digital signature</span>
+          <canvas class="sig-canvas" id="sig-cv"></canvas>
+        </div>
+        <button class="btn-primary-app on" style="max-width:400px;width:100%;" onclick="goSuccess()">Submit Record &#8594;</button>
+      </div>
+    </div>
+    <div class="screen" id="s-success">
+      <canvas id="confetti-canvas"></canvas>
+      <div class="succ-ring">&#10003;</div>
+      <div class="succ-title">Record Submitted</div>
+      <div class="succ-sub">Sanitation record logged, signed, and synced to the compliance database</div>
+      <div class="succ-score">100%</div>
+      <div class="succ-score-lbl">Compliance Score</div>
+      <div class="succ-dets">
+        <div class="sd-r"><span class="sd-l">Record ID</span><span class="sd-v" id="rec-id">#SAN-20260623-0047</span></div>
+        <div class="sd-r"><span class="sd-l">Synced to</span><span class="sd-v">Supabase · CA-EAST</span></div>
+        <div class="sd-r"><span class="sd-l">PDF generated</span><span class="sd-v" style="color:var(--green)">&#10003; Archived</span></div>
+      </div>
+      <button class="btn-primary-app on" style="max-width:360px;width:100%;" onclick="returnToTasks()">&#8592; Return to Task Hub</button>
+    </div>
+    <div class="screen" id="s-sup">
+      <div style="max-width:980px;margin:0 auto;width:100%;">
+        <div class="sup-hdr-row"><h2>Supervisor Dashboard</h2><p>Monday 23 June 2026 · Morning Shift · Live</p></div>
+        <div class="ov-grid" id="ov-grid"></div>
+        <div class="charts-row">
+          <div class="ch-card"><div class="ch-title">Today's Compliance by Zone (%)</div><div class="ch-wrap"><canvas id="ch-bar"></canvas></div></div>
+          <div class="ch-card"><div class="ch-title">7-Day Compliance Trend (%)</div><div class="ch-wrap"><canvas id="ch-line"></canvas></div></div>
+        </div>
+        <div class="act-card"><div class="act-hdr">Recent Activity Log</div><div id="act-log"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function initIntro(){
+  const ov=document.getElementById('intro-overlay');
+  if(!ov)return;
+  setTimeout(()=>{
+    ov.classList.add('out');
+    ov.addEventListener('animationend',()=>{ov.style.display='none';},{once:true});
+    document.querySelectorAll('.load-in').forEach(el=>el.classList.add('fired'));
+    setTimeout(()=>initScramble(),300);
+  },1600);
+})();
+(function initScrollProgress(){
+  const bar=document.getElementById('scroll-progress');
+  window.addEventListener('scroll',()=>{const pct=(window.scrollY/(document.documentElement.scrollHeight-window.innerHeight))*100;if(bar)bar.style.width=pct+'%';},{passive:true});
+})();
+const NAV=document.getElementById('main-nav');
+window.addEventListener('scroll',()=>NAV.classList.toggle('scrolled',window.scrollY>60),{passive:true});
+(function initConstellation(){
+  const cv=document.getElementById('hero-canvas');if(!cv)return;
+  const ctx=cv.getContext('2d');let W,H,mouse={x:-9999,y:-9999};
+  function resize(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;}
+  window.addEventListener('resize',resize,{passive:true});resize();
+  const N=70;
+  const pts=Array.from({length:N},()=>({x:Math.random()*100,y:Math.random()*100,vx:(Math.random()-.5)*.018,vy:-(Math.random()*.014+.003),r:Math.random()*1.6+.5,o:Math.random()*.5+.15,life:Math.random()*200}));
+  cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect();mouse.x=(e.clientX-r.left)/W*100;mouse.y=(e.clientY-r.top)/H*100;});
+  cv.addEventListener('mouseleave',()=>{mouse.x=-9999;mouse.y=-9999;});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{p.life++;p.x+=p.vx;p.y+=p.vy;if(p.y<-2){p.y=102;p.x=Math.random()*100;}if(p.x<-2)p.x=102;if(p.x>102)p.x=-2;});
+    const CONN_DIST=14;
+    for(let i=0;i<N;i++){
+      for(let j=i+1;j<N;j++){const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<CONN_DIST){const a=(1-d/CONN_DIST)*0.18;ctx.beginPath();ctx.moveTo(pts[i].x/100*W,pts[i].y/100*H);ctx.lineTo(pts[j].x/100*W,pts[j].y/100*H);ctx.strokeStyle='rgba(201,168,76,'+a+')';ctx.lineWidth=.6;ctx.stroke();}}
+      const dx=pts[i].x-mouse.x,dy=pts[i].y-mouse.y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<20){const a=(1-d/20)*.4;ctx.beginPath();ctx.moveTo(pts[i].x/100*W,pts[i].y/100*H);ctx.lineTo(mouse.x/100*W,mouse.y/100*H);ctx.strokeStyle='rgba(201,168,76,'+a+')';ctx.lineWidth=.8;ctx.stroke();}
+    }
+    pts.forEach(p=>{const a=p.o*(Math.sin(p.life*.025)+1)*.5;ctx.beginPath();ctx.arc(p.x/100*W,p.y/100*H,p.r,0,Math.PI*2);ctx.fillStyle='rgba(201,168,76,'+a+')';ctx.fill();});
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+document.addEventListener('mousemove',e=>{const dx=(e.clientX/window.innerWidth-.5)*18,dy=(e.clientY/window.innerHeight-.5)*12;const rw=document.getElementById('ring-wrap');if(rw)rw.style.transform=`translate(calc(-50% + ${dx*.3}px), calc(-50% + ${dy*.3}px))`;});
+window.addEventListener('scroll',()=>{const rw=document.getElementById('ring-wrap');if(rw&&window.scrollY<window.innerHeight)rw.style.transform=`translate(-50%, calc(-50% + ${window.scrollY*.15}px))`;},{passive:true});
+function initScramble(){
+  const el=document.getElementById('scramble-target');if(!el)return;
+  const final='Intelligence Platform',chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let frame=0,totalFrames=28;
+  function tick(){el.textContent=final.split('').map((c,i)=>{if(c===' ')return ' ';if(i<Math.floor((frame/totalFrames)*final.length))return c;return chars[Math.floor(Math.random()*chars.length)];}).join('');frame++;if(frame<=totalFrames)requestAnimationFrame(tick);else el.textContent=final;}
+  tick();
+}
+document.querySelectorAll('.magnetic').forEach(btn=>{
+  btn.addEventListener('mousemove',e=>{const r=btn.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);btn.style.transform=`translate(${dx*.18}px,${dy*.18}px)`;});
+  btn.addEventListener('mouseleave',()=>{btn.style.transform='';btn.style.transition='transform .5s var(--ease-spring)';setTimeout(()=>btn.style.transition='',500);});
+});
+document.querySelectorAll('.btn-demo-hero,.btn-demo-banner,.btn-primary-app').forEach(btn=>{
+  btn.addEventListener('click',e=>{const r=btn.getBoundingClientRect(),rip=document.createElement('span');rip.className='btn-ripple';const size=Math.max(r.width,r.height)*2;rip.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-r.left-size/2}px;top:${e.clientY-r.top-size/2}px;`;btn.appendChild(rip);setTimeout(()=>rip.remove(),700);});
+});
+document.querySelectorAll('.tilt-card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{const r=card.getBoundingClientRect(),cx=(e.clientX-r.left)/r.width-.5,cy=(e.clientY-r.top)/r.height-.5;card.style.transform=`perspective(800px) rotateX(${-cy*8}deg) rotateY(${cx*8}deg) translateZ(4px)`;});
+  card.addEventListener('mouseleave',()=>{card.style.transform='perspective(800px) rotateX(0) rotateY(0) translateZ(0)';card.style.transition='transform .5s var(--ease-spring)';setTimeout(()=>{card.style.transition='';},500);});
+});
+const io=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target);}});},{threshold:.08,rootMargin:'0px 0px -30px 0px'});
+document.querySelectorAll('[data-reveal],[data-stagger],[data-clip]').forEach(el=>io.observe(el));
+const cio=new IntersectionObserver(entries=>{entries.forEach(e=>{if(!e.isIntersecting)return;const el=e.target,target=parseInt(el.dataset.count)||0,prefix=el.dataset.prefix||'',suffix=el.dataset.suffix||'';if(target===0){el.textContent=prefix+'0'+suffix;cio.unobserve(el);return;}let start=null;function step(ts){if(!start)start=ts;const pct=Math.min((ts-start)/1600,1),ease=1-Math.pow(1-pct,4);el.textContent=prefix+Math.round(ease*target)+suffix;if(pct<1)requestAnimationFrame(step);}requestAnimationFrame(step);cio.unobserve(el);});},{threshold:.5});
+document.querySelectorAll('.stat-num[data-count]').forEach(el=>cio.observe(el));
+function tickClock(){const n=new Date(),el=document.getElementById('app-clk');if(el)el.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+tickClock();setInterval(tickClock,15000);
+const S={screen:'s-splash',prev:null,op:null,zone:null,checked:new Set(),timerStart:null,timerInt:null,taskDone:false,sigDone:false,chartsInited:false};
+const OPS=[{name:'Maria Santos',role:'Line Operator',init:'MS'},{name:'James Okafor',role:'Sanitation Lead',init:'JO'},{name:'Priya Nair',role:'Line Operator',init:'PN'},{name:'Tom Nguyen',role:'Shift Supervisor',init:'TN'},{name:'Sofia Reyes',role:'Quality Tech',init:'SR'},{name:'Ahmed Hassan',role:'Line Operator',init:'AH'}];
+const ZONES=[{id:'A',name:'Zone A',sub:'Mixing Room',ico:'🥣',tasks:2,st:'pending'},{id:'B',name:'Zone B',sub:'Packing Line',ico:'📦',tasks:1,st:'pending'},{id:'C',name:'Zone C',sub:'Loading Bay',ico:'🚛',tasks:3,st:'clear'}];
+const CL=[{lbl:'Floor wash-down with 200ppm sanitiser solution',note:'ISO 22000 · Section 8.2.1'},{lbl:'All drains cleared and covers replaced',note:'HACCP Pre-requisite Programme'},{lbl:'Equipment contact surfaces wiped — food-safe sanitiser',note:'Check product expiry date'},{lbl:'Overhead structures checked — free of debris',note:'Include pipes and light fixtures'},{lbl:'Hand hygiene stations stocked and operational',note:'Soap · Sanitiser · Paper towel'},{lbl:'Sanitiser concentration verified — test strip 200ppm',note:'Log strip colour reading'},{lbl:'Wash water temperature logged — ≥ 82°C',note:'Record digital thermometer reading'},{lbl:'Pest control entry points sealed and intact',note:'Check all floor-level access points'},{lbl:'Foreign body hazard check complete',note:'Glass · Hard plastic · Metal shards'},{lbl:'Supervisor verbal pre-production approval obtained',note:'Note supervisor name on sign-off'}];
+const TASKS=[{id:1,name:'Pre-Shift Equipment Check',st:'done',due:'07:15'},{id:2,name:'Pre-Production Sanitation Check',st:'active',due:'08:30'},{id:3,name:'Mid-Shift Surface Wipe',st:'pending',due:'11:00'},{id:4,name:'Post-Production Deep Clean',st:'pending',due:'14:30'}];
+function goScreen(id){
+  if(id===S.screen)return;
+  const cur=document.getElementById(S.screen),nxt=document.getElementById(id);
+  if(!cur||!nxt)return;
+  cur.classList.remove('active');cur.classList.add('exit-left');
+  setTimeout(()=>cur.classList.remove('exit-left'),420);
+  nxt.classList.add('active');S.prev=S.screen;S.screen=id;
+  const pill=document.getElementById('zone-pill'),supBtn=document.getElementById('sup-toggle');
+  const show=['s-tasks','s-check','s-signoff','s-success','s-sup'].includes(id);
+  if(pill){pill.classList.toggle('show',show&&!!S.zone);if(S.zone)pill.textContent='Zone '+S.zone.id+' · '+S.zone.sub;}
+  if(supBtn){supBtn.classList.toggle('show',show);supBtn.classList.toggle('active',id==='s-sup');}
+  if(id==='s-sup')initCharts();
+}
+function buildOps(){const g=document.getElementById('op-grid');if(!g)return;g.innerHTML='';OPS.forEach(op=>{const c=document.createElement('div');c.className='op-card';c.innerHTML="<div class='op-av'>"+op.init+"</div><div class='op-nm'>"+op.name+"</div><div class='op-rl'>"+op.role+"</div>";c.onclick=()=>{document.querySelectorAll('.op-card').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');S.op=op;const b=document.getElementById('login-btn');if(b)b.classList.add('on');};g.appendChild(c);});}
+function goZone(){if(!S.op)return;buildZones();goScreen('s-zone');}
+function buildZones(){const g=document.getElementById('zone-list');if(!g)return;g.innerHTML='';ZONES.forEach(z=>{const c=document.createElement('div');c.className='zone-row';const pill=z.st==='clear'?"<span class='z-badge clear'>All Clear</span>":"<span class='z-badge pend'>Tasks Pending</span>";c.innerHTML="<div class='zrl'><div class='zone-ico'>"+z.ico+"</div><div><div class='z-name'>"+z.name+' · '+z.sub+"</div><div class='z-desc'>"+z.tasks+' task'+(z.tasks!==1?'s':'')+' assigned</div></div></div><div class="zrr"><div class="z-count">'+z.tasks+' tasks</div>'+pill+'</div><span class="zone-chevron">›</span>';c.onclick=()=>{S.zone=z;buildTasks();buildOvGrid();goScreen('s-tasks');};g.appendChild(c);});}
+function buildTasks(){if(!S.zone)return;const nm=document.getElementById('th-zone-name');if(nm)nm.textContent='Zone '+S.zone.id+' · '+S.zone.sub;buildTaskList();}
+function buildTaskList(){const el=document.getElementById('task-list-el');if(!el)return;el.innerHTML='';TASKS.forEach(t=>{const row=document.createElement('div');let cls='task-row',ico,icc,valHtml;if(t.st==='done'){cls+=' t-done';ico='✓';icc='done';valHtml="<span style='color:var(--green)'>Done</span>";}else if(t.st==='active'){cls+=' t-active';ico='▶';icc='active';valHtml='<span>'+(S.taskDone?'100%':'0%')+'</span>';}else{ico='○';icc='pending';valHtml="<span style='color:#2E2E2E'>—</span>";}row.className=cls;const due=t.st==='done'?'Completed · '+t.due:t.st==='active'?'Due '+t.due+' · '+(S.taskDone?'Completed':'In Progress'):'Due '+t.due+' · Pending';row.innerHTML="<div class='t-ico "+icc+"'>"+ico+"</div><div class='t-info'><div class='t-name'>"+t.name+"</div><div class='t-time'>"+due+"</div></div><div style='font-size:.76rem;font-weight:600;color:var(--gold)'>"+valHtml+"</div><span class='t-chev'>›</span>";if(t.st==='active'&&!S.taskDone)row.onclick=()=>openCL(t);el.appendChild(row);});const sc=document.getElementById('th-score');if(sc)sc.textContent=(S.taskDone?50:25)+'%';}
+function returnToTasks(){S.taskDone=true;buildTaskList();goScreen('s-tasks');}
+function openCL(t){const nz=document.getElementById('cl-zone'),no=document.getElementById('cl-op'),nt=document.getElementById('cl-task-nm');if(nz)nz.textContent=S.zone?'Zone '+S.zone.id+' · '+S.zone.sub:'';if(no)no.textContent=S.op?S.op.name:'';if(nt)nt.textContent=t.name;S.checked.clear();buildCLItems();updateCLProg();if(S.timerInt)clearInterval(S.timerInt);S.timerStart=Date.now();S.timerInt=setInterval(tickTimer,1000);tickTimer();goScreen('s-check');}
+function tickTimer(){if(!S.timerStart)return;const e=Math.floor((Date.now()-S.timerStart)/1000),m=String(Math.floor(e/60)).padStart(2,'0'),s=String(e%60).padStart(2,'0');const el=document.getElementById('cl-timer');if(el)el.textContent=m+':'+s;}
+function buildCLItems(){const c=document.getElementById('cl-items-el');if(!c)return;c.innerHTML='';CL.forEach((item,i)=>{const row=document.createElement('div');row.className='cl-row';row.innerHTML="<div class='cl-cb'><span class='cl-cb-check'>✓</span></div><div class='cl-txt'><div class='cl-lbl'>"+item.lbl+"</div><div class='cl-note'>"+item.note+"</div></div><div class='cl-ts' data-i='"+i+"'>—</div>";row.onclick=()=>toggleItem(i,row);c.appendChild(row);});}
+function toggleItem(i,row){const ts=row.querySelector('.cl-ts');if(S.checked.has(i)){S.checked.delete(i);row.classList.remove('checked');if(ts)ts.textContent='—';}else{S.checked.add(i);row.classList.add('checked');const n=new Date();if(ts)ts.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');row.style.transform='scale(1.01)';setTimeout(()=>row.style.transform='',200);}updateCLProg();}
+function updateCLProg(){const tot=CL.length,done=S.checked.size,pct=Math.round((done/tot)*100);const fill=document.getElementById('cl-fill'),ptxt=document.getElementById('cl-pct-txt'),btn=document.getElementById('cl-submit');if(fill)fill.style.width=pct+'%';if(ptxt)ptxt.textContent=done+' / '+tot;if(btn){if(done===tot){btn.classList.add('ready');btn.textContent='✓ All Complete — Submit & Sign Off';}else{btn.classList.remove('ready');btn.textContent='Submit & Sign Off ('+done+'/'+tot+' complete)';}}}
+function goSignOff(){if(S.checked.size<CL.length)return;const n=new Date(),e=S.timerStart?Math.floor((Date.now()-S.timerStart)/1000):0;const em=String(Math.floor(e/60)).padStart(2,'0'),es=String(e%60).padStart(2,'0');const pad=s=>String(s).padStart(2,'0');document.getElementById('so-task').textContent=document.getElementById('cl-task-nm').textContent;document.getElementById('so-zone').textContent=S.zone?'Zone '+S.zone.id+' · '+S.zone.sub:'';document.getElementById('so-op').textContent=S.op?S.op.name:'';document.getElementById('so-time').textContent=em+':'+es;document.getElementById('so-ts').textContent=n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate())+' '+pad(n.getHours())+':'+pad(n.getMinutes());S.sigDone=false;const hint=document.getElementById('sig-hint');if(hint)hint.style.display='';const cv=document.getElementById('sig-cv');if(cv){const ctx=cv.getContext('2d');ctx.clearRect(0,0,cv.width,cv.height);}const area=document.getElementById('sig-area');if(area)area.style.borderColor='';goScreen('s-signoff');}
+function doSign(){if(S.sigDone)return;S.sigDone=true;const hint=document.getElementById('sig-hint');if(hint)hint.style.display='none';const area=document.getElementById('sig-area'),cv=document.getElementById('sig-cv');if(cv&&area){cv.width=area.offsetWidth;cv.height=area.offsetHeight;const ctx=cv.getContext('2d');ctx.strokeStyle='rgba(201,168,76,0.8)';ctx.lineWidth=1.8;ctx.lineCap='round';ctx.lineJoin='round';const w=cv.width,h=cv.height;const pts=[[.12,.65],[.18,.38],[.24,.62],[.3,.55],[.38,.32],[.44,.68],[.5,.38],[.57,.58],[.64,.32],[.7,.66],[.77,.42],[.83,.55],[.88,.48],[.92,.56]];let i=0;ctx.beginPath();ctx.moveTo(pts[0][0]*w,pts[0][1]*h);function drawSig(){if(i>=pts.length-1)return;i++;ctx.lineTo(pts[i][0]*w,pts[i][1]*h);ctx.stroke();if(i<pts.length-1)setTimeout(drawSig,28);}drawSig();area.style.borderColor='rgba(46,204,113,.4)';}}
+function goSuccess(){if(S.timerInt){clearInterval(S.timerInt);S.timerInt=null;}document.getElementById('rec-id').textContent='#SAN-20260623-'+String(Math.floor(Math.random()*89)+10).padStart(4,'0');const ring=document.querySelector('.succ-ring');if(ring){ring.style.animation='none';void ring.offsetWidth;ring.style.animation='';}goScreen('s-success');launchConfetti();}
+function launchConfetti(){const cv=document.getElementById('confetti-canvas');if(!cv)return;cv.width=cv.offsetWidth;cv.height=cv.offsetHeight;const ctx=cv.getContext('2d');const COLS=['#C9A84C','#E8D5A3','#8B6914','#FFFFFF','#F0E0A0'];const pieces=Array.from({length:70},()=>({x:Math.random()*cv.width,y:-10,vx:(Math.random()-.5)*3.5,vy:Math.random()*3+1.5,r:Math.random()*4+2,col:COLS[Math.floor(Math.random()*COLS.length)],rot:Math.random()*360,vr:(Math.random()-.5)*8,life:0}));let raf;function frame(){ctx.clearRect(0,0,cv.width,cv.height);let alive=false;pieces.forEach(p=>{p.y+=p.vy;p.x+=p.vx;p.rot+=p.vr;p.vy+=.06;p.life++;if(p.y<cv.height+10)alive=true;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.col;ctx.globalAlpha=Math.max(0,1-p.life/120);ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);ctx.restore();});if(alive)raf=requestAnimationFrame(frame);else ctx.clearRect(0,0,cv.width,cv.height);}raf=requestAnimationFrame(frame);setTimeout(()=>{cancelAnimationFrame(raf);ctx.clearRect(0,0,cv.width,cv.height);},4500);}
+const OV_DATA=[{name:'Zone A · Mixing Room',score:95,cls:'good',badge:'On Track',tasks:'3/3 tasks complete'},{name:'Zone B · Packing Line',score:78,cls:'warn',badge:'Action Needed',tasks:'2/3 tasks complete'},{name:'Zone C · Loading Bay',score:67,cls:'crit',badge:'Critical',tasks:'1/3 tasks complete'}];
+function buildOvGrid(){const g=document.getElementById('ov-grid');if(!g)return;g.innerHTML='';OV_DATA.forEach(z=>{const c=document.createElement('div');c.className='ov-card';c.innerHTML="<div class='ov-top'><div class='ov-name'>"+z.name+"</div><div class='ov-badge "+z.cls+"'>"+z.badge+"</div></div><div class='ov-score "+z.cls+"'>"+z.score+"%</div><div class='ov-bar'><div class='ov-bar-fill "+z.cls+"' style='width:0' data-w='"+z.score+"'></div></div><div class='ov-tasks-txt'>"+z.tasks+"</div>";g.appendChild(c);});setTimeout(()=>document.querySelectorAll('.ov-bar-fill').forEach(el=>el.style.width=el.dataset.w+'%'),300);}
+function buildActLog(){const log=document.getElementById('act-log');if(!log)return;[{d:'g',txt:'Maria Santos completed Pre-Shift Equipment Check — Zone A',t:'07:15'},{d:'g',txt:'James Okafor submitted Post-Shift Wipe — Zone B · 100%',t:'07:42'},{d:'a',txt:'Zone B · Mid-Shift Surface Wipe overdue by 18 minutes',t:'08:18'},{d:'g',txt:'Ahmed Hassan completed Pre-Production Check — Zone C',t:'08:31'},{d:'a',txt:'Zone C · Chemical Store Inspection not yet started',t:'08:47'},{d:'r',txt:'Alert: Zone C compliance below 70% threshold',t:'08:47'}].forEach(i=>{const el=document.createElement('div');el.className='act-item';el.innerHTML="<div class='act-dot "+i.d+"'></div><div class='act-txt'>"+i.txt+"</div><div class='act-time'>"+i.t+"</div>";log.appendChild(el);});}
+function initCharts(){buildActLog();buildOvGrid();if(S.chartsInited)return;S.chartsInited=true;const dkGrid='rgba(255,255,255,.04)';const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:dkGrid},ticks:{color:'#3A3A3A',font:{size:9}}},y:{grid:{color:dkGrid},ticks:{color:'#3A3A3A',font:{size:9}},min:0,max:100}}};const barEl=document.getElementById('ch-bar');if(barEl)new Chart(barEl,{type:'bar',data:{labels:['Zone A','Zone B','Zone C'],datasets:[{data:[95,78,67],backgroundColor:['rgba(46,204,113,.22)','rgba(243,156,18,.22)','rgba(231,76,60,.22)'],borderColor:['#2ECC71','#F39C12','#E74C3C'],borderWidth:1.5,borderRadius:3}]},options:{...base}});const lineEl=document.getElementById('ch-line');if(lineEl)new Chart(lineEl,{type:'line',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Zone A',data:[88,91,94,90,95,93,95],borderColor:'#2ECC71',backgroundColor:'rgba(46,204,113,.05)',tension:.4,borderWidth:1.5,pointRadius:2.5,pointBackgroundColor:'#2ECC71'},{label:'Zone B',data:[82,79,84,76,80,75,78],borderColor:'#F39C12',backgroundColor:'rgba(243,156,18,.04)',tension:.4,borderWidth:1.5,pointRadius:2.5,pointBackgroundColor:'#F39C12'},{label:'Zone C',data:[71,68,73,65,70,62,67],borderColor:'#E74C3C',backgroundColor:'rgba(231,76,60,.04)',tension:.4,borderWidth:1.5,pointRadius:2.5,pointBackgroundColor:'#E74C3C'}]},options:{...base,plugins:{legend:{display:true,labels:{color:'#555',font:{size:9},boxWidth:10,padding:8}}}}});}
+function toggleSup(){if(S.screen==='s-sup')goScreen(S.prev||'s-tasks');else goScreen('s-sup');}
+function openDemo(){document.getElementById('demo-overlay').classList.add('open');document.body.style.overflow='hidden';goScreen('s-splash');buildOps();buildOvGrid();setTimeout(()=>goScreen('s-login'),2400);}
+function closeDemo(){document.getElementById('demo-overlay').classList.remove('open');document.body.style.overflow='';S.op=null;S.zone=null;S.checked.clear();S.taskDone=false;S.sigDone=false;if(S.timerInt){clearInterval(S.timerInt);S.timerInt=null;}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDemo();});
+</script>
+</body>
 </html>
